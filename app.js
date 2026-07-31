@@ -919,63 +919,593 @@
     refreshAll();
   }
 
-  // ====== 锻炼 ======
-  const SPORT_KEY = 'workbench_sport';
-  function refreshSport(){
-    const all = store.get(SPORT_KEY, []);
-    const wkStart = (()=>{
-      const d = new Date(); const day = d.getDay()||7;
-      d.setDate(d.getDate()-day+1); d.setHours(0,0,0,0); return d;
-    })();
-    const wkDates = [];
-    for(let i=0;i<7;i++){
-      const x = new Date(wkStart); x.setDate(wkStart.getDate()+i);
-      wkDates.push(x.getFullYear()+'-'+(x.getMonth()+1)+'-'+x.getDate());
+  // ====== 锻炼（FitDaily 风格 5 tab） ======
+  const SPORT_KEY = 'workbench_sport';            // 兼容旧数据
+  const SPORT_TODAY_KEY = 'workbench_sport_today';
+  const SPORT_PLAN_KEY = 'workbench_sport_plan';
+  const SPORT_FOLLOWS_KEY = 'workbench_sport_follows';
+  const SPORT_COLLECTIONS_KEY = 'workbench_sport_collections';
+  const SPORT_AI_KEY = 'workbench_sport_ai';
+
+  const BODY_PARTS = [
+    {key:'胸', emoji:'💪'},{key:'背', emoji:'🔙'},
+    {key:'腿', emoji:'🦵'},{key:'肩', emoji:'🏋️'},
+    {key:'臂', emoji:'💪'},{key:'核心', emoji:'🎯'},
+    {key:'臀', emoji:'🍑'},{key:'全身', emoji:'🌟'},
+    {key:'有氧', emoji:'🏃'}
+  ];
+
+  const WEEK_TEMPLATE = {1:'胸',2:'背',3:'有氧',4:'肩臂',5:'腿臀',6:'核心',7:'休息'};
+  const BLOGGER_COLORS = ['#ff8a5b','#ffadc6','#a89bd9','#7ecaa0','#5b9bff','#e675d4','#ffcf70','#5fc9c4'];
+
+  const SPORT_FOLLOW_DEFAULT = [
+    {id:'b_pamela', name:'帕梅拉', color:'#ff8a5b'},
+    {id:'b_ouyang', name:'欧阳春晓', color:'#ffadc6'},
+    {id:'b_hanxiaosi', name:'韩小四', color:'#a89bd9'},
+    {id:'b_zhouliuye', name:'周六野 Zoey', color:'#7ecaa0'},
+    {id:'b_meilibalei', name:'美丽芭蕾', color:'#5b9bff'}
+  ];
+
+  const AI_COACH_KEYWORDS = {
+    '肩颈':{label:'肩颈放松', videos:[{name:'5分钟肩颈拉伸',url:'https://www.bilibili.com/video/BV1gs411T7Cm',dur:'5min',platform:'B站'},{name:'办公室肩颈放松',url:'https://www.bilibili.com/video/BV1Eb411u7Xw',dur:'8min',platform:'B站'}],actions:['颈部绕环 ×10 次','斜方肌拉伸 左右各 30 秒','肩部画圈 前 10 / 后 10','耸肩放松 ×10 次']},
+    '腰':{label:'久坐腰部舒缓', videos:[{name:'腰部舒缓瑜伽',url:'https://www.bilibili.com/video/BV1Js411o7s1',dur:'10min',platform:'B站'},{name:'猫式伸展跟练',url:'https://www.youtube.com/watch?v=R2L2RtvJqLE',dur:'7min',platform:'YouTube'}],actions:['猫式伸展 ×8 次','婴儿式 保持 60 秒','仰卧扭转 左右各 30 秒','坐姿前屈 30 秒']},
+    '瘦肚子':{label:'核心燃脂', videos:[{name:'10分钟核心训练',url:'https://www.bilibili.com/video/BV1v4411C7g2',dur:'10min',platform:'B站'},{name:'帕梅拉腹肌',url:'https://www.bilibili.com/video/BV1PK4y1k7jT',dur:'15min',platform:'B站'}],actions:['卷腹 ×15 次','平板支撑 30 秒','俄罗斯转体 ×20 次','仰卧抬腿 ×15 次']},
+    '拉伸':{label:'睡前拉伸', videos:[{name:'睡前全身拉伸',url:'https://www.bilibili.com/video/BV1oW411n7jH',dur:'8min',platform:'B站'},{name:'助眠瑜伽',url:'https://www.bilibili.com/video/BV1Ds411T7tY',dur:'12min',platform:'B站'}],actions:['全身拉伸 8 分钟','股四头肌拉伸','腿部后侧拉伸','颈部放松']},
+    '生理期':{label:'经期舒缓瑜伽', videos:[{name:'经期舒缓瑜伽',url:'https://www.bilibili.com/video/BV1Ks411w7Ry',dur:'15min',platform:'B站'},{name:'生理期运动',url:'https://www.youtube.com/watch?v=2L2lnxIcJAQ',dur:'10min',platform:'YouTube'}],actions:['仰卧束角 60 秒','蝴蝶式 60 秒','婴儿式','呼吸放松']},
+    '累':{label:'低强度恢复', videos:[{name:'10分钟放松瑜伽',url:'https://www.bilibili.com/video/BV1Gs411T7pL',dur:'10min',platform:'B站'}],actions:['散步 20 分钟','阴瑜伽','呼吸训练 5 分钟']},
+    '不想动':{label:'10分钟微运动', videos:[{name:'10分钟低强度',url:'https://www.bilibili.com/video/BV1Rs411T7vK',dur:'10min',platform:'B站'}],actions:['靠墙静蹲 30 秒','拉伸 5 分钟','深呼吸']},
+    '全身':{label:'全身燃脂', videos:[{name:'帕梅拉全身燃脂',url:'https://www.bilibili.com/video/BV1PK4y1k7jT',dur:'20min',platform:'B站'},{name:'全身 HIIT',url:'https://www.youtube.com/watch?v=ml6cT4AZdqI',dur:'15min',platform:'YouTube'}],actions:['开合跳 ×20','深蹲 ×15','俯卧撑 ×10','波比跳 ×8']},
+    '腿':{label:'腿部塑形', videos:[{name:'腿部塑形跟练',url:'https://www.bilibili.com/video/BV1Js411o7wa',dur:'15min',platform:'B站'}],actions:['深蹲 ×15','弓步蹲 左右各 10','臀桥 ×15','侧卧抬腿 左右各 12']},
+    '臀':{label:'蜜桃臀训练', videos:[{name:'蜜桃臀养成',url:'https://www.bilibili.com/video/BV1Ks411w7sH',dur:'15min',platform:'B站'}],actions:['臀桥 ×15','臀推 ×12','侧抬腿 左右各 15','跪姿后踢腿 ×12']},
+    '胸':{label:'胸部塑形', videos:[{name:'胸部训练',url:'https://www.bilibili.com/video/BV1Es411u7nK',dur:'12min',platform:'B站'}],actions:['俯卧撑 ×10','哑铃卧推 ×12','跪姿俯卧撑 ×10','上斜推举 ×10']},
+    '背':{label:'背部塑形', videos:[{name:'背部训练',url:'https://www.bilibili.com/video/BV1Hs411T7wG',dur:'12min',platform:'B站'}],actions:['划船 ×12','YTWL 各 10','弹力带 ×15','俯身飞鸟 ×12']},
+    '手臂':{label:'拜拜肉消除', videos:[{name:'手臂塑形',url:'https://www.bilibili.com/video/BV1Cs411o7tY',dur:'10min',platform:'B站'}],actions:['哑铃弯举 ×12','臂屈伸 ×10','肩推 ×12','侧平举 ×12']},
+    '有氧':{label:'心肺训练', videos:[{name:'心肺 HIIT',url:'https://www.bilibili.com/video/BV1Zs411T7sQ',dur:'20min',platform:'B站'}],actions:['跳绳 100 个','开合跳 ×20','波比跳 ×10','高抬腿 30 秒']}
+  };
+
+  function getSportToday(){ return store.get(SPORT_TODAY_KEY, null) || {date:'', kcal:0, completed:0, planBody:[], dietList:[]}; }
+  function setSportToday(d){ store.set(SPORT_TODAY_KEY, d); }
+  function getSportPlan(){ return store.get(SPORT_PLAN_KEY, null); }
+  function setSportPlan(p){ store.set(SPORT_PLAN_KEY, p); }
+  function getSportFollows(){ return store.get(SPORT_FOLLOWS_KEY, null); }
+  function setSportFollows(f){ store.set(SPORT_FOLLOWS_KEY, f); }
+  function getSportCollections(){ return store.get(SPORT_COLLECTIONS_KEY, []); }
+  function setSportCollections(c){ store.set(SPORT_COLLECTIONS_KEY, c); }
+  function getSportAI(){ return store.get(SPORT_AI_KEY, []); }
+  function setSportAI(a){ store.set(SPORT_AI_KEY, a); }
+
+  // 初始化默认值（首次使用）
+  function initSportDefaults(){
+    if(!getSportFollows()) setSportFollows(SPORT_FOLLOW_DEFAULT);
+    if(!getSportPlan()) setSportPlan({weekStart:getWeekStart(), schedule:WEEK_TEMPLATE, checked:{}});
+  }
+  function getWeekStart(){
+    const d = new Date(); const day = d.getDay()||7;
+    d.setDate(d.getDate()-day+1); d.setHours(0,0,0,0);
+    return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+  }
+  function getTodayDayOfWeek(){
+    const d = new Date(); return d.getDay()||7;
+  }
+
+  // 兼容旧数据
+  function migrateSportOld(){
+    const old = store.get(SPORT_KEY, []);
+    if(old.length === 0) return 0;
+    const todayStr = todayKey();
+    const todayMin = old.filter(s => s.date === todayStr).reduce((s,x)=>s+(x.min||0), 0);
+    return todayMin;
+  }
+
+  // ====== Tab 切换 ======
+  function bindSportTabs(){
+    $$('#sportTabs .tab-item').forEach(b => b.addEventListener('click', ()=>{
+      $$('#sportTabs .tab-item').forEach(x=>x.classList.remove('active'));
+      $$('#page-exercise .tab-pane').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      const t = b.dataset.sptab;
+      const pane = $('#page-exercise .tab-pane[data-spane="'+t+'"]');
+      if(pane) pane.classList.add('active');
+      // 触发对应渲染
+      if(t==='today') renderSportToday();
+      if(t==='week') renderSportWeekPlan();
+      if(t==='blogger'){ renderSportBloggers(); renderSportCollections(); renderWeekOverview(); }
+      if(t==='ai') renderSportAICoach();
+    }));
+    // 跨 tab 跳转
+    $$('[data-go]').forEach(b => b.addEventListener('click', ()=>{
+      const target = b.dataset.go;
+      const tabBtn = $$('#sportTabs .tab-item').find(x => x.dataset.sptab === target);
+      if(tabBtn) tabBtn.click();
+    }));
+  }
+
+  // ====== 今日 Tab ======
+  function renderSportToday(){
+    const today = getSportToday();
+    if(today.date !== todayKey()){
+      today.date = todayKey();
+      today.kcal = 0;
+      today.completed = 0;
+      today.dietList = [];
+      today.planBody = [];
+      setSportToday(today);
     }
-    $('#sportWeek').textContent = new Set(all.filter(s=> wkDates.includes(s.date)).map(s=>s.date+s.name)).size;
-    $('#sportTotal').textContent = all.length;
-    const ul = $('#sportList'); ul.innerHTML='';
-    all.slice().reverse().slice(0,20).forEach(s=>{
+    // 问候语
+    const h = new Date().getHours();
+    const greet = h < 6 ? '夜深了小龙' : h < 12 ? '早上好小龙' : h < 18 ? '下午好小龙' : '晚上好小龙';
+    $('#sportGreeting').textContent = greet + '，今天也要元气满满 ✨';
+    // 连续打卡天数（从旧数据计算）
+    const oldData = store.get(SPORT_KEY, []);
+    let streak = 0;
+    if(oldData.length){
+      const dates = Array.from(new Set(oldData.map(s=>s.date))).sort().reverse();
+      const todayD = todayKey();
+      let cur = new Date(); cur.setHours(0,0,0,0);
+      while(dates.includes(cur.getFullYear()+'-'+(cur.getMonth()+1)+'-'+cur.getDate())){
+        streak++; cur.setDate(cur.getDate()-1);
+      }
+    }
+    $('#sportStreak').textContent = '🔥 连续打卡 ' + streak + ' 天';
+    // 今日训练分钟数（合并旧数据）
+    const todayMin = today.planBody.length ? (today.planBody.length * 15) : (migrateSportOld() || 0);
+    $('#sportMinTotal').textContent = todayMin;
+    $('#sportKcal').textContent = today.kcal;
+    $('#sportKcalTag').textContent = today.kcal;
+    $('#sportActions').textContent = today.completed;
+    // 今日日程
+    const plan = getSportPlan() || {schedule:{}};
+    const dow = getTodayDayOfWeek();
+    const todayBody = plan.schedule[dow];
+    const schedEl = $('#sportTodaySchedule');
+    if(todayBody && todayBody !== '休息'){
+      schedEl.innerHTML = '<b style="color:var(--pink-700);font-size:14px;">💪 ' + todayBody + '</b><div class="muted" style="margin-top:4px;">点击「开始训练」开始今天的训练吧～</div>';
+    } else {
+      schedEl.innerHTML = '<div style="color:var(--ink-soft);">🎉 今天是休息日，好好放松～</div>';
+    }
+    // 饮食列表
+    const ul = $('#sportDietList');
+    ul.innerHTML = '';
+    (today.dietList||[]).slice().reverse().forEach(d => {
       const li = document.createElement('li');
-      li.innerHTML = `<div class="l-info">
-          <span><span class="badge todo" style="font-size:10px;">${s.name}</span> ${s.min?'· '+s.min+' 分钟':''}</span>
-          <span class="muted" style="font-size:11px;">${s.date.slice(5)}</span>
-        </div>
-        <button class="l-del" data-id="${s.id}">✕</button>`;
+      li.innerHTML = '<div class="l-info"><span>'+d.name+'</span><span class="muted" style="font-size:11px;">'+d.time+'</span></div><span style="color:var(--pink-600);font-weight:700;">'+d.kcal+' kcal</span>';
       ul.appendChild(li);
     });
-    $$('.l-del', ul).forEach(b => b.addEventListener('click', e=>{
-      const id = e.target.dataset.id;
-      store.set(SPORT_KEY, store.get(SPORT_KEY, []).filter(x=>x.id!==id));
-      refreshSport();
+    if(!today.dietList || today.dietList.length === 0){
+      ul.innerHTML = '<li style="justify-content:center;color:var(--ink-soft);font-size:13px;">还没有记录饮食，点击上方「记录饮食」～</li>';
+    }
+  }
+
+  function bindDietModal(){
+    $('#dietBtn').addEventListener('click', ()=>{
+      $('#dietName').value = '';
+      $('#dietKcal').value = '';
+      openModal('dietModal');
+    });
+    $('#dietConfirm').addEventListener('click', ()=>{
+      const name = $('#dietName').value.trim();
+      const kcal = +$('#dietKcal').value || 0;
+      if(!name){ toast('请输入食物名称'); return; }
+      const today = getSportToday();
+      const d = new Date();
+      today.dietList = today.dietList || [];
+      today.dietList.push({name, kcal, time: pad(d.getHours())+':'+pad(d.getMinutes())});
+      today.kcal = (today.kcal || 0) + kcal;
+      setSportToday(today);
+      closeModal('dietModal');
+      renderSportToday();
+      toast('已记录');
+    });
+  }
+
+  // ====== 选部位 Tab ======
+  let sportPickedBody = [];
+  function renderBodyPicker(){
+    const g = $('#bodyPickerGrid');
+    g.innerHTML = '';
+    BODY_PARTS.forEach(b => {
+      const chip = document.createElement('div');
+      chip.className = 'body-chip';
+      chip.innerHTML = '<div class="body-chip-circle">'+b.emoji+'</div><div class="body-chip-name">'+b.key+'</div>';
+      chip.addEventListener('click', ()=>{
+        const idx = sportPickedBody.indexOf(b.key);
+        if(idx >= 0){ sportPickedBody.splice(idx,1); chip.classList.remove('selected'); }
+        else { sportPickedBody.push(b.key); chip.classList.add('selected'); }
+        $('#bodyPickedLabel').textContent = '已选：' + (sportPickedBody.length ? sportPickedBody.join('、') : '无');
+      });
+      g.appendChild(chip);
+    });
+  }
+
+  function bindStartTraining(){
+    $('#startTrainingBtn').addEventListener('click', ()=>{
+      if(sportPickedBody.length === 0){ toast('请先选择部位'); return; }
+      const today = getSportToday();
+      today.planBody = sportPickedBody.slice();
+      today.completed = (today.completed||0) + sportPickedBody.length;
+      setSportToday(today);
+      // 跳到周计划
+      const tabBtn = $$('#sportTabs .tab-item').find(x => x.dataset.sptab === 'week');
+      if(tabBtn) tabBtn.click();
+      // 自动勾选今天
+      const dow = getTodayDayOfWeek();
+      const plan = getSportPlan() || {schedule:{}, checked:{}};
+      plan.schedule[dow] = sportPickedBody.join('+');
+      plan.checked[dow] = true;
+      setSportPlan(plan);
+      toast('已开始训练，加油 💪');
+      sportPickedBody = [];
+      $$('.body-chip').forEach(c => c.classList.remove('selected'));
+      $('#bodyPickedLabel').textContent = '已选：无';
+    });
+  }
+
+  // ====== 周计划 Tab ======
+  function renderSportWeekPlan(){
+    const plan = getSportPlan() || {schedule: WEEK_TEMPLATE, checked:{}, weekStart: getWeekStart()};
+    if(!plan.schedule) plan.schedule = WEEK_TEMPLATE;
+    if(!plan.checked) plan.checked = {};
+    if(!plan.weekStart) plan.weekStart = getWeekStart();
+    setSportPlan(plan);
+    const wkDays = [{n:'一',d:1},{n:'二',d:2},{n:'三',d:3},{n:'四',d:4},{n:'五',d:5},{n:'六',d:6},{n:'日',d:7}];
+    const dow = getTodayDayOfWeek();
+    const days = [1,2,3,4,5,6,7];
+    const planned = days.filter(d => plan.schedule[d] && plan.schedule[d] !== '休息');
+    const done = planned.filter(d => plan.checked[d]).length;
+    const pct = planned.length ? Math.round(done/planned.length*100) : 0;
+    $('#sportWeekPct').textContent = pct;
+    $('#sportWeekBar').style.width = pct+'%';
+    $('#sportWeekCount').textContent = '已完成 '+done+'/'+planned.length+' 项';
+    const wrap = $('#weekPlanList');
+    wrap.innerHTML = '';
+    wkDays.forEach(wd => {
+      const body = plan.schedule[wd.d] || '休息';
+      const isRest = !body || body === '休息';
+      const checked = !!plan.checked[wd.d];
+      const card = document.createElement('div');
+      card.className = 'week-plan-card' + (wd.d===dow?' today':'') + (checked?' checked':'');
+      let bodyClass = isRest?'rest':'';
+      let tag = isRest?'<span class="week-plan-tag">休息</span>':'<span class="week-plan-tag">'+body+'</span>';
+      let actionHtml = '';
+      if(checked){
+        actionHtml = '<button class="week-plan-act del" data-day="'+wd.d+'">✕</button>';
+      } else if(!isRest){
+        actionHtml = '<button class="week-plan-act del" data-day="'+wd.d+'">✕</button>';
+      }
+      card.innerHTML = '<div class="week-plan-day">周'+wd.n+'</div>'+
+        '<div class="week-plan-body '+bodyClass+'">'+(checked?'✓ 已完成':'')+'</div>'+
+        tag+
+        (checked?'<button class="week-plan-act" data-check="'+wd.d+'" style="background:var(--good);color:#fff;font-size:14px;">✓</button>':'<button class="week-plan-act add" data-check="'+wd.d+'">✓</button>')+
+        actionHtml;
+      wrap.appendChild(card);
+    });
+    wrap.querySelectorAll('[data-check]').forEach(b => b.addEventListener('click', e=>{
+      const d = +b.dataset.check;
+      plan.checked[d] = !plan.checked[d];
+      setSportPlan(plan);
+      renderSportWeekPlan();
+      // 同步今日打卡
+      if(d === dow){
+        const today = getSportToday();
+        today.completed = (plan.checked[d]?sportPickedBody.length||1:0);
+        setSportToday(today);
+      }
+      toast(plan.checked[d]?'已标记完成 ✓':'取消完成');
     }));
-    const g = $('#sportWeekGrid'); g.innerHTML='';
-    const wkMap2 = ['一','二','三','四','五','六','日'];
-    wkDates.forEach((d,i)=>{
-      const cell = document.createElement('div');
-      const has = all.some(s => s.date===d);
-      cell.className = 'cell'+(has?' done':'');
-      cell.innerHTML = `<b>${wkMap2[i]}</b><span>${d.slice(8)}</span>`;
-      g.appendChild(cell);
+    wrap.querySelectorAll('[data-day]').forEach(b => b.addEventListener('click', e=>{
+      const d = +b.dataset.day;
+      const body = plan.schedule[d];
+      if(confirm('删除周'+['一','二','三','四','五','六','日'][d-1]+'的'+(body||'休息')+'安排？')){
+        delete plan.schedule[d];
+        delete plan.checked[d];
+        setSportPlan(plan);
+        renderSportWeekPlan();
+      }
+    }));
+  }
+
+  function bindGenWeek(){
+    $('#genWeekBtn').addEventListener('click', ()=>{
+      if(!confirm('一键生成训练分化周计划？将覆盖当前排期')) return;
+      const plan = getSportPlan() || {};
+      plan.schedule = Object.assign({}, WEEK_TEMPLATE);
+      plan.checked = {};
+      setSportPlan(plan);
+      renderSportWeekPlan();
+      toast('已生成训练分化周计划 ✨');
     });
   }
+
+  // ====== 博主 Tab ======
+  function renderSportBloggers(){
+    const follows = getSportFollows() || SPORT_FOLLOW_DEFAULT;
+    setSportFollows(follows);
+    const row = $('#bloggerRow');
+    row.innerHTML = '';
+    follows.forEach(f => {
+      const wrap = document.createElement('div');
+      wrap.className = 'blogger-avatar-wrap';
+      wrap.innerHTML = '<div class="blogger-avatar" style="border-color:'+f.color+';background:'+f.color+'22;color:'+f.color+'">'+f.name.charAt(0)+'</div><div class="blogger-name">'+f.name+'</div>';
+      wrap.addEventListener('click', ()=>{
+        const colls = getSportCollections().filter(c => c.bloggerId === f.id);
+        if(colls.length === 0){ toast(f.name+' 还没有合集'); return; }
+        const tabBtn = $$('#sportTabs .tab-item').find(x => x.dataset.sptab === 'blogger');
+        if(tabBtn) tabBtn.click();
+        toast('有 '+colls.length+' 个跟练合集');
+      });
+      row.appendChild(wrap);
+    });
+    // 添加按钮
+    const add = document.createElement('div');
+    add.className = 'blogger-avatar-wrap';
+    add.innerHTML = '<div class="blogger-avatar add">+</div><div class="blogger-name">添加</div>';
+    add.addEventListener('click', ()=>{
+      $('#addBloggerName').value = '';
+      selectedBloggerColor = BLOGGER_COLORS[0];
+      renderBloggerColorChips();
+      openModal('addBloggerModal');
+    });
+    row.appendChild(add);
+  }
+
+  function renderBloggerColorChips(){
+    const wrap = $('#bloggerColorChips');
+    wrap.innerHTML = '';
+    BLOGGER_COLORS.forEach(c => {
+      const chip = document.createElement('div');
+      chip.className = 'blogger-color-chip' + (c===selectedBloggerColor?' selected':'');
+      chip.style.background = c;
+      chip.addEventListener('click', ()=>{
+        selectedBloggerColor = c;
+        renderBloggerColorChips();
+      });
+      wrap.appendChild(chip);
+    });
+  }
+  let selectedBloggerColor = BLOGGER_COLORS[0];
+
+  function bindAddBlogger(){
+    $('#addBloggerConfirm').addEventListener('click', ()=>{
+      const name = $('#addBloggerName').value.trim();
+      if(!name){ toast('请输入博主名称'); return; }
+      const follows = getSportFollows();
+      follows.push({id:'b_'+Date.now(), name, color:selectedBloggerColor});
+      setSportFollows(follows);
+      closeModal('addBloggerModal');
+      renderSportBloggers();
+      renderWeekOverview();
+      toast('已添加');
+    });
+  }
+
+  // ====== 跟练合集 ======
+  let newCollTempVideos = [];
+  function renderSportCollections(){
+    const colls = getSportCollections();
+    const wrap = $('#collList');
+    wrap.innerHTML = '';
+    if(colls.length === 0){
+      wrap.innerHTML = '<div class="coll-empty">还没有合集～点「+ 新建」创建<br>比如：一三五帕梅拉燃脂 · 二四六周六野体态</div>';
+      return;
+    }
+    colls.forEach(c => {
+      const card = document.createElement('div');
+      card.className = 'collection-card';
+      let vidHtml = '';
+      (c.videos||[]).forEach((v,i) => {
+        vidHtml += '<div class="coll-video"><span class="badge" style="font-size:10px;background:var(--line-2);color:var(--pink-700);">'+v.platform+'</span><a href="'+v.url+'" target="_blank">'+v.title+'</a><button class="coll-del" data-cid="'+c.id+'" data-vi="'+i+'" style="background:none;color:var(--ink-soft);cursor:pointer;">✕</button></div>';
+      });
+      card.innerHTML = '<div class="coll-head"><div class="coll-name">'+c.name+'</div><button class="coll-del" data-cdel="'+c.id+'" style="background:none;color:var(--ink-soft);cursor:pointer;">✕</button></div>'+
+        '<div class="coll-videos">'+((c.videos||[]).length+' 个视频 · 创建于 '+c.date)+'</div>'+
+        vidHtml+
+        '<div class="coll-add-vid" data-cadd="'+c.id+'">+ 添加视频链接</div>';
+      wrap.appendChild(card);
+    });
+    wrap.querySelectorAll('[data-cdel]').forEach(b => b.addEventListener('click', e=>{
+      if(!confirm('删除这个合集？')) return;
+      setSportCollections(getSportCollections().filter(c => c.id !== e.target.dataset.cdel));
+      renderSportCollections();
+      renderWeekOverview();
+    }));
+    wrap.querySelectorAll('[data-cadd]').forEach(b => b.addEventListener('click', e=>{
+      const cid = e.target.dataset.cadd;
+      const url = prompt('粘贴视频链接（B站/抖音/YouTube）:');
+      if(!url) return;
+      const title = prompt('视频标题:', detectVideoPlatform(url)+' 视频') || (detectVideoPlatform(url)+' 视频');
+      const colls = getSportCollections();
+      const c = colls.find(x => x.id === cid);
+      if(c){
+        c.videos = c.videos || [];
+        c.videos.push({url, title, platform: detectVideoPlatform(url)});
+        setSportCollections(colls);
+        renderSportCollections();
+        renderWeekOverview();
+      }
+    }));
+    wrap.querySelectorAll('[data-cid]').forEach(b => b.addEventListener('click', e=>{
+      const cid = e.target.dataset.cid;
+      const vi = +e.target.dataset.vi;
+      const colls = getSportCollections();
+      const c = colls.find(x => x.id === cid);
+      if(c && c.videos){
+        c.videos.splice(vi, 1);
+        setSportCollections(colls);
+        renderSportCollections();
+      }
+    }));
+  }
+
+  function bindNewColl(){
+    $('#newCollBtn').addEventListener('click', ()=>{
+      newCollTempVideos = [];
+      $('#newCollName').value = '';
+      $('#newCollUrl').value = '';
+      $('#newCollTitle').value = '';
+      renderNewCollVideos();
+      openModal('newCollModal');
+    });
+    $('#newCollAddVideo').addEventListener('click', ()=>{
+      const url = $('#newCollUrl').value.trim();
+      if(!url){ toast('请输入链接'); return; }
+      const title = $('#newCollTitle').value.trim() || (detectVideoPlatform(url)+' 视频');
+      newCollTempVideos.push({url, title, platform: detectVideoPlatform(url)});
+      $('#newCollUrl').value = '';
+      $('#newCollTitle').value = '';
+      renderNewCollVideos();
+    });
+    $('#newCollConfirm').addEventListener('click', ()=>{
+      const name = $('#newCollName').value.trim();
+      if(!name){ toast('请输入合集名称'); return; }
+      const colls = getSportCollections();
+      colls.push({id:'c_'+Date.now(), name, videos:newCollTempVideos.slice(), date:todayKey()});
+      setSportCollections(colls);
+      closeModal('newCollModal');
+      renderSportCollections();
+      renderWeekOverview();
+      toast('合集已创建');
+    });
+  }
+
+  function renderNewCollVideos(){
+    const wrap = $('#newCollVideos');
+    wrap.innerHTML = '';
+    newCollTempVideos.forEach((v,i) => {
+      const item = document.createElement('div');
+      item.className = 'coll-video';
+      item.innerHTML = '<span class="badge" style="font-size:10px;background:var(--line-2);color:var(--pink-700);">'+v.platform+'</span><span style="flex:1;font-size:12px;">'+v.title+'</span><button class="nv-del" data-i="'+i+'" style="background:none;color:var(--ink-soft);cursor:pointer;font-size:14px;">✕</button>';
+      item.querySelector('.nv-del').addEventListener('click', e=>{
+        newCollTempVideos.splice(+e.target.dataset.i,1);
+        renderNewCollVideos();
+      });
+      wrap.appendChild(item);
+    });
+  }
+
+  function renderWeekOverview(){
+    const follows = getSportFollows() || SPORT_FOLLOW_DEFAULT;
+    const wrap = $('#weekOverview');
+    wrap.innerHTML = '';
+    follows.slice(0,5).forEach(f => {
+      const row = document.createElement('div');
+      row.className = 'week-overview-row';
+      const grid = document.createElement('div');
+      grid.className = 'week-overview-grid';
+      for(let i=1;i<=7;i++){
+        const cell = document.createElement('div');
+        cell.className = 'week-overview-cell';
+        cell.style.borderColor = f.color;
+        grid.appendChild(cell);
+      }
+      row.innerHTML = '<div class="week-overview-name" style="color:'+f.color+';">'+f.name.charAt(0)+'</div>';
+      row.appendChild(grid);
+      wrap.appendChild(row);
+    });
+  }
+
+  // ====== AI 教练 Tab ======
+  const AI_QUICK_CHIPS = ['肩颈不舒服','久坐腰酸','想瘦肚子','睡前拉伸','生理期','不想动'];
+  function renderAIQuickChips(){
+    const wrap = $('#aiQuickChips');
+    wrap.innerHTML = '';
+    AI_QUICK_CHIPS.forEach(c => {
+      const chip = document.createElement('button');
+      chip.className = 'ai-quick-chip';
+      chip.textContent = c;
+      chip.addEventListener('click', ()=>{
+        $('#aiChatInput').value = c;
+        handleAIChat();
+      });
+      wrap.appendChild(chip);
+    });
+  }
+
+  function renderSportAICoach(){
+    // 重新渲染历史消息（最近 5 条）
+    const wrap = $('#aiChatWrap');
+    // 保留第一个初始气泡，删除其它
+    wrap.innerHTML = '<div class="ai-chat-bubble"><div class="ai-chat-text"><div>你好呀！我是你的 AI 教练 💪</div><div>告诉我你的状态，比如「肩颈不舒服」「想瘦肚子」「今天好累」，我马上给你安排合适的跟练视频～</div></div></div>';
+    const history = getSportAI();
+    history.slice(-5).forEach(h => {
+      const userDiv = document.createElement('div');
+      userDiv.className = 'ai-user-msg';
+      userDiv.innerHTML = '<span>🧑 '+h.query+'</span>';
+      wrap.appendChild(userDiv);
+      const replyDiv = document.createElement('div');
+      replyDiv.className = 'ai-reply';
+      replyDiv.innerHTML = h.reply;
+      wrap.appendChild(replyDiv);
+    });
+    wrap.scrollTop = wrap.scrollHeight;
+  }
+
+  function parseAICoachQuery(text){
+    const found = [];
+    Object.keys(AI_COACH_KEYWORDS).forEach(kw => {
+      if(text.indexOf(kw) >= 0) found.push({kw, ...AI_COACH_KEYWORDS[kw]});
+    });
+    return found;
+  }
+
+  function buildAIReply(matches, query){
+    if(matches.length === 0){
+      return '<b>没太懂呢～</b>试试说「肩颈不舒服」「想瘦肚子」「睡前拉伸」「练腿」让我帮你推跟练 💪';
+    }
+    let html = '<b>💪 收到！推荐以下跟练：</b>';
+    matches.slice(0,3).forEach(m => {
+      html += '<div style="margin-top:6px;"><b>'+m.label+'</b></div>';
+      html += '<div style="margin-top:4px;"><b>📺 跟练视频</b></div>';
+      m.videos.forEach(v => {
+        html += '<div class="vid-item"><a href="'+v.url+'" target="_blank">'+v.name+'</a><span style="color:var(--ink-soft);font-size:11px;">'+v.platform+' · '+v.dur+'</span></div>';
+      });
+      html += '<div style="margin-top:4px;"><b>🎯 推荐动作</b></div><ul>';
+      m.actions.forEach(a => { html += '<li>'+a+'</li>'; });
+      html += '</ul>';
+    });
+    return html;
+  }
+
+  function handleAIChat(){
+    const input = $('#aiChatInput');
+    const text = input.value.trim();
+    if(!text) return;
+    const matches = parseAICoachQuery(text);
+    const replyHtml = buildAIReply(matches, text);
+    const wrap = $('#aiChatWrap');
+    const userDiv = document.createElement('div');
+    userDiv.className = 'ai-user-msg';
+    userDiv.innerHTML = '<span>🧑 '+text+'</span>';
+    wrap.appendChild(userDiv);
+    const replyDiv = document.createElement('div');
+    replyDiv.className = 'ai-reply';
+    replyDiv.innerHTML = replyHtml;
+    wrap.appendChild(replyDiv);
+    input.value = '';
+    setTimeout(()=>{ wrap.scrollTop = wrap.scrollHeight; }, 50);
+    // 存历史
+    const hist = getSportAI();
+    hist.push({id:'ai_'+Date.now(), query:text, reply:replyHtml, ts:Date.now()});
+    setSportAI(hist.slice(-30));
+  }
+
+  function bindAIChat(){
+    $('#aiChatSend').addEventListener('click', handleAIChat);
+    $('#aiChatInput').addEventListener('keydown', e => { if(e.key === 'Enter') handleAIChat(); });
+  }
+
+  // ====== 锻炼入口 ======
   function bindSport(){
-    $$('.sport-quick button').forEach(b => b.addEventListener('click', () => addSport(b.dataset.sport)));
-    $('#sportAdd').addEventListener('click', ()=>{
-      const name = $('#sportName').value.trim();
-      const min = +$('#sportMin').value||0;
-if(!name){ toast('请输入运动项目'); return; }
-    addSport(name, min);
-    $('#sportName').value=''; $('#sportMin').value='';
-    });
-    refreshSport();
-  }
-  function addSport(name, min){
-    const all = store.get(SPORT_KEY, []);
-    all.push({id:'s_'+Date.now(), name, min:min||0, date:todayKey()});
-    store.set(SPORT_KEY, all);
-    refreshSport();
-    toast('已打卡');
+    initSportDefaults();
+    bindSportTabs();
+    renderBodyPicker();
+    bindStartTraining();
+    bindGenWeek();
+    bindAddBlogger();
+    bindNewColl();
+    renderAIQuickChips();
+    bindAIChat();
+    bindDietModal();
+    renderSportToday();
+    renderSportWeekPlan();
   }
 
   // ====== 新闻 ======

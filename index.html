@@ -560,47 +560,238 @@
       </div>
     </div>
 
-    <!-- 锻炼 -->
+    <!-- 锻炼（FitDaily 风格 5 tab） -->
     <section class="page" id="page-exercise">
       <div class="page-header pink">
         <div class="left">
           <img src="./assets/icons/run.svg" alt="" class="header-ico" />
-          <span class="page-title">锻炼</span>
+          <span class="page-title">健身打卡</span>
         </div>
         <span class="page-date" id="sportDate"></span>
       </div>
-      <div class="card">
-        <div class="card-title pink">今日锻炼打卡</div>
-        <div class="sport-quick">
-          <button data-sport="跑步" class="btn-soft">跑步</button>
-          <button data-sport="瑜伽" class="btn-soft">瑜伽</button>
-          <button data-sport="跳绳" class="btn-soft">跳绳</button>
-          <button data-sport="力量" class="btn-soft">力量</button>
-          <button data-sport="散步" class="btn-soft">散步</button>
-          <button data-sport="骑行" class="btn-soft">骑行</button>
+
+      <div class="tab-bar" id="sportTabs">
+        <button class="tab-item active" data-sptab="today">今日</button>
+        <button class="tab-item" data-sptab="body">选部位</button>
+        <button class="tab-item" data-sptab="week">周计划</button>
+        <button class="tab-item" data-sptab="blogger">博主</button>
+        <button class="tab-item" data-sptab="ai">AI教练</button>
+      </div>
+
+      <!-- Tab 1: 今日 -->
+      <div class="tab-pane active" data-spane="today">
+        <div class="sport-hero">
+          <img src="./assets/kitty.svg" alt="" class="sport-hero-avatar" />
+          <div class="sport-hero-text">
+            <div id="sportGreeting">早上好小龙，今天也要元气满满 ✨</div>
+            <div class="muted" id="sportStreak">🔥 连续打卡 0 天</div>
+          </div>
         </div>
-        <div class="sport-stats">
-          <div>本周已运动 <b id="sportWeek">0</b> 次</div>
-          <div>累计 <b id="sportTotal">0</b> 次</div>
+
+        <div class="sport-stats-row">
+          <div class="sport-stat-card">
+            <div class="sport-stat-icon">⏱</div>
+            <div class="sport-stat-num"><span id="sportMinTotal">0</span><i>min</i></div>
+            <div class="muted">今日训练</div>
+          </div>
+          <div class="sport-stat-card">
+            <div class="sport-stat-icon">🔥</div>
+            <div class="sport-stat-num"><span id="sportKcal">0</span><i>kcal</i></div>
+            <div class="muted">大卡摄入</div>
+          </div>
+          <div class="sport-stat-card">
+            <div class="sport-stat-icon">💪</div>
+            <div class="sport-stat-num"><span id="sportActions">0</span></div>
+            <div class="muted">完成动作</div>
+          </div>
+        </div>
+
+        <div class="sport-shortcut-row">
+          <button class="sport-shortcut" data-go="body">
+            <span class="ico">👟</span>
+            <span>开始训练</span>
+          </button>
+          <button class="sport-shortcut" id="dietBtn">
+            <span class="ico">🍱</span>
+            <span>记录饮食</span>
+          </button>
+          <button class="sport-shortcut" data-go="week">
+            <span class="ico">📅</span>
+            <span>日程</span>
+          </button>
+        </div>
+
+        <div class="card">
+          <div class="card-row">
+            <span class="card-title pink">📅 今日日程</span>
+            <button class="btn-mini" data-go="week">管理</button>
+          </div>
+          <div id="sportTodaySchedule" class="muted" style="padding:8px 0;">还没有日程，去「周计划」安排吧～</div>
+        </div>
+
+        <div class="card">
+          <div class="card-row">
+            <span class="card-title pink">🍱 今日饮食</span>
+            <span class="muted"><span id="sportKcalTag">0</span> kcal</span>
+          </div>
+          <ul class="ledger-list" id="sportDietList"></ul>
         </div>
       </div>
-      <div class="card">
-        <div class="card-row">
-          <span class="card-title pink">今日记录</span>
-          <span class="muted">支持自填</span>
+
+      <!-- Tab 2: 选部位 -->
+      <div class="tab-pane" data-spane="body">
+        <div class="card">
+          <div class="card-title pink sport-body-title">今天练哪里呀？</div>
+          <div class="muted">可多选部位，选好后点「开始训练」</div>
         </div>
-        <div class="form-row">
-          <input id="sportName" placeholder="运动项目" />
-          <input id="sportMin" type="number" placeholder="时长(分钟)" />
-          <button id="sportAdd" class="btn-pink">＋ 记录</button>
+        <div class="body-picker-grid" id="bodyPickerGrid"></div>
+        <div class="card-row" style="margin:10px 0;">
+          <span class="muted" id="bodyPickedLabel">已选：无</span>
         </div>
-        <ul class="ledger-list" id="sportList"></ul>
+        <button id="startTrainingBtn" class="btn-pink-big">💪 开始训练</button>
       </div>
-      <div class="card">
-        <div class="card-title pink">本周运动日历</div>
-        <div class="week-grid" id="sportWeekGrid"></div>
+
+      <!-- Tab 3: 周计划 -->
+      <div class="tab-pane" data-spane="week">
+        <div class="card sport-progress-card">
+          <div class="card-row">
+            <span class="card-title pink">🏆 本周完成度</span>
+            <span class="muted" id="sportWeekCount">已完成 0/0 项</span>
+          </div>
+          <div class="sport-progress-num"><span id="sportWeekPct">0</span>%</div>
+          <div class="sport-progress-bar"><i id="sportWeekBar" style="width:0%"></i></div>
+        </div>
+
+        <div class="card sport-plan-tpl-card">
+          <div class="card-title pink">🎯 快速排期</div>
+          <div class="muted">周一胸 · 周二背 · 周三有氧 · 周四肩臂 · 周五腿臀 · 周六核心 · 周日休息</div>
+          <button id="genWeekBtn" class="btn-pink" style="margin-top:8px;">✨ 生成训练分化周计划</button>
+        </div>
+
+        <div id="weekPlanList" class="week-plan-list"></div>
+      </div>
+
+      <!-- Tab 4: 博主 -->
+      <div class="tab-pane" data-spane="blogger">
+        <div class="card">
+          <div class="card-row">
+            <span class="card-title pink">⭐ 明星跟练博主</span>
+            <button class="btn-mini" id="addBloggerBtn">点头像看合集</button>
+          </div>
+          <div class="blogger-row" id="bloggerRow"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-row">
+            <span class="card-title pink">📚 我的跟练合集</span>
+            <button id="newCollBtn" class="btn-pink-small">+ 新建</button>
+          </div>
+          <div id="collList"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title pink">📅 一周跟练总览</div>
+          <div class="week-overview" id="weekOverview"></div>
+        </div>
+      </div>
+
+      <!-- Tab 5: AI 教练 -->
+      <div class="tab-pane" data-spane="ai">
+        <div class="ai-hero">
+          <div class="ai-hero-icon">🤖</div>
+          <div class="ai-hero-title">AI 健身教练</div>
+          <div class="ai-hero-sub">哪里不舒服/想练哪里，直接说，我来推跟练</div>
+        </div>
+
+        <div class="ai-quick-chips" id="aiQuickChips"></div>
+
+        <div class="ai-chat-wrap" id="aiChatWrap">
+          <div class="ai-chat-bubble">
+            <div class="ai-chat-text">
+              <div>你好呀！我是你的 AI 教练 💪</div>
+              <div>告诉我你的状态，比如「肩颈不舒服」「想瘦肚子」「今天好累」，我马上给你安排合适的跟练视频～</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-chat-input">
+          <input id="aiChatInput" placeholder="例如：肩颈不舒服..." />
+          <button id="aiChatSend" class="btn-pink-small">发送</button>
+        </div>
+        <div class="muted" style="text-align:center;font-size:11px;margin-top:6px;">内置教练离线可用 · 后续可接入 Gemini 等真实 AI 接口</div>
       </div>
     </section>
+
+    <!-- 饮食记录弹窗 -->
+    <div class="modal-overlay" id="dietModal" hidden>
+      <div class="modal">
+        <div class="modal-head">
+          <h3>记录饮食</h3>
+          <button class="modal-close" data-close="dietModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row" style="grid-template-columns:1fr;">
+            <input id="dietName" placeholder="食物名称，如：苹果、鸡胸肉" />
+            <input id="dietKcal" type="number" placeholder="热量（kcal）" />
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-soft" data-close="dietModal">取消</button>
+          <button id="dietConfirm" class="btn-pink">记录</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 新建跟练合集弹窗 -->
+    <div class="modal-overlay" id="newCollModal" hidden>
+      <div class="modal">
+        <div class="modal-head">
+          <h3>新建跟练合集</h3>
+          <button class="modal-close" data-close="newCollModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row" style="grid-template-columns:1fr;">
+            <input id="newCollName" placeholder="合集名称，如：周末燃脂" />
+          </div>
+          <div class="nail-tag-section">
+            <div class="nail-tag-group-title">视频链接（可加多个）</div>
+            <div id="newCollVideos"></div>
+            <div class="form-row" style="grid-template-columns:1fr auto;margin-top:6px;">
+              <input id="newCollUrl" placeholder="B站/抖音/YouTube 链接" />
+              <input id="newCollTitle" placeholder="标题（可选）" />
+              <button id="newCollAddVideo" class="btn-mini">＋ 添加</button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-soft" data-close="newCollModal">取消</button>
+          <button id="newCollConfirm" class="btn-pink">创建</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 添加博主弹窗 -->
+    <div class="modal-overlay" id="addBloggerModal" hidden>
+      <div class="modal">
+        <div class="modal-head">
+          <h3>添加博主</h3>
+          <button class="modal-close" data-close="addBloggerModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row" style="grid-template-columns:1fr;">
+            <input id="addBloggerName" placeholder="博主名称" />
+          </div>
+          <div class="nail-tag-section">
+            <div class="nail-tag-group-title">选个主题色</div>
+            <div class="blogger-color-chips" id="bloggerColorChips"></div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-soft" data-close="addBloggerModal">取消</button>
+          <button id="addBloggerConfirm" class="btn-pink">添加</button>
+        </div>
+      </div>
+    </div>
 
     <!-- 新闻热点 -->
     <section class="page" id="page-news">

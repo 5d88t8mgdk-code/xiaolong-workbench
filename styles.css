@@ -942,3 +942,176 @@ textarea#memoInput{
   .nail-viewer-modal{max-width:100%;}
   .nail-viewer-img{max-height:300px;}
 }
+
+/* ===== 锻炼板块（FitDaily 风格） ===== */
+.sport-hero{display:flex;gap:12px;align-items:center;background:linear-gradient(180deg,var(--bg-soft-2),var(--bg-soft));border-radius:16px;padding:14px;margin-bottom:12px;border:1px solid var(--pink-100);}
+.sport-hero-avatar{width:48px;height:48px;border-radius:50%;background:#fff;padding:4px;}
+.sport-hero-text{flex:1;font-size:14px;font-weight:700;color:var(--pink-700);line-height:1.5;}
+
+.sport-stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+.sport-stat-card{
+  background:#fff;border-radius:16px;padding:14px 8px;text-align:center;
+  border:1px solid var(--pink-100);box-shadow:var(--shadow);
+}
+.sport-stat-icon{font-size:28px;margin-bottom:4px;}
+.sport-stat-num{font-size:24px;font-weight:800;color:var(--pink-700);line-height:1.2;}
+.sport-stat-num i{font-size:11px;color:var(--ink-soft);font-weight:600;font-style:normal;margin-left:2px;}
+
+.sport-shortcut-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+.sport-shortcut{
+  background:#fff;border-radius:16px;padding:14px 8px;border:1px solid var(--pink-100);
+  box-shadow:var(--shadow);cursor:pointer;display:flex;flex-direction:column;
+  align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--pink-700);
+  transition:.2s;
+}
+.sport-shortcut:active{transform:scale(.97);}
+.sport-shortcut .ico{font-size:32px;}
+
+.sport-progress-card{background:linear-gradient(180deg,var(--bg-soft-2),var(--bg-soft));}
+.sport-progress-num{font-size:32px;font-weight:800;color:var(--pink-700);margin:8px 0;}
+.sport-progress-bar{height:10px;background:var(--bg-soft);border-radius:99px;overflow:hidden;}
+.sport-progress-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--pink-400),var(--pink-500));border-radius:99px;transition:width .35s;}
+.sport-plan-tpl-card{background:linear-gradient(180deg,#fff5f8,#fff);}
+
+.body-picker-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px;}
+.body-chip{
+  background:#fff;border-radius:14px;border:1px solid var(--pink-100);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;cursor:pointer;transition:.2s;padding:14px 8px;
+}
+.body-chip:active{transform:scale(.97);}
+.body-chip-circle{
+  width:48px;height:48px;border-radius:50%;background:var(--bg-soft-2);
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+}
+.body-chip.selected .body-chip-circle{background:linear-gradient(180deg,var(--pink-400),var(--pink-500));color:#fff;}
+.body-chip.selected{border-color:var(--pink-500);box-shadow:0 4px 12px rgba(255,90,141,.3);background:var(--bg-soft-2);}
+.body-chip-name{font-size:13px;font-weight:700;color:var(--pink-700);}
+.body-chip.selected .body-chip-name{color:var(--pink-700);}
+
+.week-plan-list{display:flex;flex-direction:column;gap:8px;}
+.week-plan-card{
+  display:flex;align-items:center;gap:10px;background:#fff;border-radius:14px;
+  padding:10px 14px;border:1px solid var(--line);box-shadow:var(--shadow);
+  font-size:14px;
+}
+.week-plan-card.today{border:2px solid var(--pink-500);box-shadow:0 4px 12px rgba(255,90,141,.25);}
+.week-plan-card.checked{background:var(--good-bg);border-color:var(--good-line);}
+.week-plan-day{font-weight:800;color:var(--pink-700);width:50px;flex-shrink:0;}
+.week-plan-body{flex:1;font-weight:600;color:var(--ink);}
+.week-plan-body.rest{color:var(--ink-soft);font-weight:400;}
+.week-plan-card.checked .week-plan-body{color:var(--good);font-weight:700;}
+.week-plan-tag{font-size:11px;background:var(--line-2);color:var(--pink-700);padding:2px 8px;border-radius:99px;flex-shrink:0;}
+.week-plan-card.checked .week-plan-tag{background:var(--good);color:#fff;}
+.week-plan-act{
+  background:none;border:none;width:30px;height:30px;border-radius:50%;
+  font-size:18px;cursor:pointer;color:var(--ink-soft);flex-shrink:0;
+}
+.week-plan-act.del{color:var(--ink-soft);}
+.week-plan-act.del:hover{color:#cc3168;}
+.week-plan-act.add{background:var(--line-2);color:var(--pink-700);}
+
+.blogger-row{display:flex;gap:12px;overflow-x:auto;padding:4px 0 8px;-webkit-overflow-scrolling:touch;}
+.blogger-row::-webkit-scrollbar{display:none;}
+.blogger-avatar-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;cursor:pointer;}
+.blogger-avatar{
+  width:56px;height:56px;border-radius:50%;border:2px solid;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:18px;color:#fff;background:var(--bg-soft);
+}
+.blogger-avatar.add{border:2px dashed var(--line-d);background:var(--bg-soft);color:var(--ink-soft);font-size:24px;}
+.blogger-name{font-size:11px;color:var(--ink);max-width:60px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+.collection-card{
+  background:var(--bg-soft);border:1px dashed var(--line-d);
+  border-radius:12px;padding:10px 12px;margin-bottom:8px;
+}
+.coll-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.coll-name{font-weight:700;color:var(--pink-700);font-size:13px;}
+.coll-del{background:none;color:var(--ink-soft);font-size:14px;cursor:pointer;}
+.coll-videos{font-size:11px;color:var(--ink-soft);margin-bottom:4px;}
+.coll-video{display:flex;align-items:center;gap:6px;padding:3px 0;}
+.coll-video a{color:var(--pink-600);text-decoration:none;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;}
+.coll-add-vid{font-size:11px;color:var(--pink-700);cursor:pointer;padding:4px 0;}
+.coll-empty{font-size:11px;color:var(--ink-soft);text-align:center;padding:6px;}
+
+.blogger-color-chips{display:flex;flex-wrap:wrap;gap:8px;}
+.blogger-color-chip{
+  width:36px;height:36px;border-radius:50%;cursor:pointer;
+  border:3px solid transparent;transition:.2s;
+}
+.blogger-color-chip.selected{border-color:var(--pink-700);transform:scale(1.1);}
+
+.week-overview{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:6px;}
+.week-overview-row{display:flex;flex-direction:column;gap:3px;}
+.week-overview-name{font-size:10px;color:var(--ink-soft);text-align:center;height:24px;line-height:24px;font-weight:700;}
+.week-overview-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.week-overview-cell{
+  aspect-ratio:1/1;border-radius:4px;background:var(--bg-soft);
+  border:1px solid var(--line);
+}
+.week-overview-cell.filled{border:1.5px solid;}
+.week-overview-cell.today{outline:1.5px solid var(--pink-700);outline-offset:1px;}
+
+/* AI 教练 */
+.ai-hero{
+  background:linear-gradient(135deg,#a89bd9,#c8b8e8);
+  border-radius:18px;padding:18px;text-align:center;color:#fff;
+  margin-bottom:12px;box-shadow:0 6px 16px rgba(168,155,217,.3);
+}
+.ai-hero-icon{font-size:36px;margin-bottom:6px;}
+.ai-hero-title{font-size:18px;font-weight:800;margin-bottom:4px;}
+.ai-hero-sub{font-size:12px;opacity:.85;}
+
+.ai-quick-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.ai-quick-chip{
+  font-size:12px;padding:6px 14px;border-radius:99px;
+  background:var(--bg-soft);border:1px solid var(--line);
+  color:var(--pink-700);cursor:pointer;transition:.2s;font-weight:600;
+}
+.ai-quick-chip:hover{background:var(--pink-100);}
+
+.ai-chat-wrap{
+  background:#fff;border-radius:14px;padding:12px;margin-bottom:10px;
+  border:1px solid var(--line);max-height:340px;overflow-y:auto;
+}
+.ai-chat-bubble{display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;}
+.ai-chat-bubble::before{
+  content:"🤖";font-size:24px;flex-shrink:0;width:36px;height:36px;
+  background:var(--bg-soft-2);border-radius:50%;display:flex;
+  align-items:center;justify-content:center;
+}
+.ai-chat-text{flex:1;background:var(--bg-soft);border-radius:12px;padding:8px 12px;font-size:13px;line-height:1.7;}
+.ai-chat-text b{color:var(--pink-700);}
+.ai-user-msg{
+  text-align:right;margin-bottom:8px;
+}
+.ai-user-msg span{
+  display:inline-block;background:var(--pink-100);color:var(--pink-700);
+  border-radius:12px;padding:8px 12px;font-size:13px;font-weight:600;max-width:80%;
+}
+.ai-reply{
+  background:linear-gradient(180deg,#f7f3fc,#fff);border-radius:12px;
+  padding:10px 12px;margin-bottom:6px;font-size:13px;line-height:1.7;
+  border:1px solid #e6dff5;
+}
+.ai-reply b{color:var(--pink-700);}
+.ai-reply ol,.ai-reply ul{margin:4px 0 4px 18px;padding:0;}
+.ai-reply li{margin-bottom:2px;}
+.ai-reply .vid-item{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dashed var(--line-d);}
+.ai-reply .vid-item:last-child{border:none;}
+.ai-reply .vid-item a{color:var(--pink-600);text-decoration:none;flex:1;font-weight:600;}
+
+.ai-chat-input{display:flex;gap:8px;}
+.ai-chat-input input{flex:1;padding:10px 12px;border:1px solid var(--line-d);border-radius:99px;outline:none;font-size:13px;}
+.ai-chat-input input:focus{border-color:var(--pink-500);}
+
+@media (max-width:760px){
+  .sport-stats-row{grid-template-columns:repeat(3,1fr);gap:6px;}
+  .sport-stat-num{font-size:20px;}
+  .sport-stat-icon{font-size:24px;}
+  .body-picker-grid{grid-template-columns:repeat(3,1fr);gap:10px;}
+  .body-chip-circle{width:48px;height:48px;font-size:20px;}
+  .week-overview{grid-template-columns:repeat(5,1fr);gap:4px;}
+  .week-overview-cell{font-size:9px;}
+}
