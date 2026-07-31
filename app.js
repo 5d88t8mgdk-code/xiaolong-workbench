@@ -8,7 +8,18 @@
   // ====== 工具 ======
   const store = {
     get(k, def){ try{ const v = localStorage.getItem(k); if(v==null) return def; try{return JSON.parse(v);}catch(_){return v;} }catch(e){ return def; } },
-    set(k, v){ if(typeof v === 'string') localStorage.setItem(k, v); else localStorage.setItem(k, JSON.stringify(v)); }
+    set(k, v){
+      try {
+        if(typeof v === 'string') localStorage.setItem(k, v);
+        else localStorage.setItem(k, JSON.stringify(v));
+        return true;
+      } catch(e){
+        // 配额超限（QuotaExceededError）——常见于存了大量 base64 图片
+        console.warn('[store] 保存失败:', k, e.name);
+        toast('存储空间不足，无法保存。建议删除一些旧款式或图片');
+        return false;
+      }
+    }
   };
   const todayKey = () => { const d = new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); };
   const monthKey = () => { const d = new Date(); return d.getFullYear()+"-"+(d.getMonth()+1); };
@@ -1844,7 +1855,8 @@
         createdAt: Date.now(),
         date: todayKey()
       });
-      setNailStyles(styles);
+      const ok = setNailStyles(styles);
+      if(!ok) return;  // 存储失败，store.set 已弹 toast，保留弹窗让用户重试
       closeModal('nailUploadModal');
       refreshNailLibrary();
       toast('款式已保存');
@@ -2441,14 +2453,21 @@
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const maxW = 500;
+        const maxW = 480;
         let w = img.width, h = img.height;
         if(w > maxW){ h = h * maxW / w; w = maxW; }
         canvas.width = w; canvas.height = h;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, w, h);
         const isSvg = file.type === 'image/svg+xml';
-        cb(isSvg ? e.target.result : canvas.toDataURL('image/png', 0.92));
+        // 照片用 JPEG 0.72 质量（体积比 PNG 小 5-10 倍），SVG/透明 PNG 保留原格式
+        if(isSvg){
+          cb(e.target.result);
+        } else if(file.type === 'image/png' && /logo|icon|sticker/i.test(file.name)){
+          cb(canvas.toDataURL('image/png'));
+        } else {
+          cb(canvas.toDataURL('image/jpeg', 0.72));
+        }
       };
       img.onerror = () => cb(e.target.result);
       img.src = e.target.result;
