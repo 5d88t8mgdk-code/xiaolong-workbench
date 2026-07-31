@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+<meta name="theme-color" content="#ff5a8d" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="小龙工作台" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="description" content="小龙工作台 - Hello Kitty 风格的个人工作台，支持换装和自定义主题" />
+<link rel="manifest" href="./manifest.json" />
+<link rel="icon" type="image/png" sizes="32x32" href="./assets/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="./assets/favicon-16.png" />
+<link rel="apple-touch-icon" href="./assets/apple-touch-icon.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon.png" />
+<link rel="stylesheet" href="./styles.css" />
+<title>小龙工作台 · Kitty 风格</title>
+</head>
+<body>
+
+<!-- 顶部状态栏 -->
+<header class="status-bar">
+  <span id="statusTime" class="status-time">--:--</span>
+  <span class="status-icons">
+    <span class="signal">
+      <span></span><span></span><span></span><span></span>
+    </span>
+    <span class="net">5G</span>
+    <span class="battery">
+      <span class="batt-fill"></span>
+      <span id="battPct">88</span>%
+    </span>
+  </span>
+</header>
+
+<div class="app">
+
+  <!-- 左侧导航 -->
+  <aside class="sidebar" id="sidebar">
+    <div class="side-top">
+      <img src="./assets/kitty.svg" alt="小龙" class="avatar-img" />
+      <div class="avatar-name">小龙</div>
+    </div>
+    <nav class="nav">
+      <button class="nav-item active" data-target="today">
+        <span class="ico-img"><img src="./assets/kitty.svg" alt=""></span>
+        <span class="label">今日计划</span>
+      </button>
+      <button class="nav-item" data-target="english">
+        <span class="ico-img"><img src="./assets/icons/book.svg" alt=""></span>
+        <span class="label">英语学习</span>
+      </button>
+      <button class="nav-item" data-target="ledger">
+        <span class="ico-img"><img src="./assets/icons/ledger.svg" alt=""></span>
+        <span class="label">记账</span>
+      </button>
+      <button class="nav-item" data-target="exercise">
+        <span class="ico-img"><img src="./assets/icons/run.svg" alt=""></span>
+        <span class="label">锻炼</span>
+      </button>
+      <button class="nav-item" data-target="news">
+        <span class="ico-img"><img src="./assets/icons/fire.svg" alt=""></span>
+        <span class="label">新闻热点</span>
+      </button>
+      <button class="nav-item" data-target="finance">
+        <span class="ico-img"><img src="./assets/icons/money.svg" alt=""></span>
+        <span class="label">理财</span>
+      </button>
+      <button class="nav-item" data-target="memo">
+        <span class="ico-img"><img src="./assets/icons/memo.svg" alt=""></span>
+        <span class="label">备忘录</span>
+      </button>
+      <button class="nav-item" data-target="todo">
+        <span class="ico-img"><img src="./assets/icons/todo.svg" alt=""></span>
+        <span class="label">待办事项</span>
+      </button>
+    </nav>
+    <button class="customize-btn" id="customizeBtn">
+      <span class="icon-wrap"><img src="./assets/icons/customize.svg" alt="" style="width:20px;height:20px;"></span>
+      <span class="label">换装</span>
+    </button>
+    <div class="side-bottom">
+      <img src="./assets/kitty-avatar.jpg" alt="" class="bot-kitty" />
+    </div>
+  </aside>
+
+  <main class="content">
+
+    <!-- 今日计划 -->
+    <section class="page active" id="page-today">
+      <div class="hero-card">
+        <div class="page-header pink">
+          <div class="left">
+            <img src="./assets/icons/cal.svg" alt="" class="header-ico" />
+            <span class="page-title">今日计划</span>
+          </div>
+          <span class="page-date" id="todayDate">2026-07-28</span>
+        </div>
+        <div class="hero-illu">
+          <img src="./assets/kitty-hero.svg" alt="Kitty" class="hero-kitty" />
+          <div class="sparkles">
+            <span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span><span>✧</span>
+          </div>
+        </div>
+        <div class="hero-motto">
+          <div class="motto-cn" id="mottoCN">今天也要元气满满呀</div>
+          <div class="motto-en" id="mottoEN">Be full of energy today</div>
+          <div class="motto-sub">小龙陪你一起把日子过好</div>
+        </div>
+      </div>
+
+      <!-- 本月日历 -->
+      <div class="card cal-card">
+        <div class="card-row">
+          <div class="card-title pink">
+            <img src="./assets/icons/cal.svg" alt="" class="card-ico" />
+            <span>本月日历</span>
+          </div>
+          <span class="muted" id="calMonthLabel">--</span>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div class="cal-tip" id="calTip">今天是 --</div>
+      </div>
+
+      <!-- 今日固定行程 -->
+      <div class="card checkin-card">
+        <div class="card-row">
+          <div class="card-title pink">
+            <img src="./assets/icons/check.svg" alt="" class="card-ico" />
+            <span>今日固定行程</span>
+          </div>
+          <span class="muted"><span id="checkDone">0</span>/7 完成 · <span id="checkPct">0</span>%</span>
+        </div>
+        <div class="routine-list" id="routineList"></div>
+        <button class="btn-add-routine" id="addRoutineBtn">＋ 新增行程</button>
+      </div>
+
+      <!-- 每日激励 -->
+      <div class="card quote-card">
+        <div class="card-row">
+          <div class="card-title pink">
+            <img src="./assets/icons/heart.svg" alt="" class="card-ico" />
+            <span>每日激励</span>
+          </div>
+          <span class="muted" id="quoteDate">—</span>
+        </div>
+        <div class="quote-line"><b>中文：</b><span id="quoteCN">—</span></div>
+        <div class="quote-line"><b>English：</b><span id="quoteEN">—</span></div>
+        <div class="quote-tip">每天 0 点自动更新</div>
+      </div>
+
+      <!-- 时钟 -->
+      <div class="card clock-card">
+        <div class="card-row">
+          <div class="card-title pink">
+            <img src="./assets/icons/clock.svg" alt="" class="card-ico" />
+            <span>当前时间</span>
+          </div>
+        </div>
+        <div class="clock-display">
+          <div class="clock-time" id="clockTime">--:--:--</div>
+          <div class="clock-date" id="clockDate">--</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 英语学习 -->
+    <section class="page" id="page-english">
+      <div class="page-header pink">
+        <div class="left">
+          <img src="./assets/icons/book.svg" alt="" class="header-ico" />
+          <span class="page-title">英语学习</span>
+        </div>
+        <span class="page-date" id="enDate"></span>
+      </div>
+
+      <div class="card">
+        <div class="card-title pink">今日单词打卡</div>
+        <div class="word-card">
+          <div class="word-en" id="wordEN">—</div>
+          <div class="word-phonetic" id="wordPhonetic">—</div>
+          <div class="word-cn" id="wordCN">—</div>
+          <div class="word-example" id="wordExample">—</div>
+        </div>
+        <div class="actions-row">
+          <button id="wordKnown" class="btn-pink">我会了</button>
+          <button id="wordNext" class="btn-soft">下一个</button>
+        </div>
+        <div class="word-stats">
+          <div>今日已掌握 <b id="wordKnownCount">0</b> 个</div>
+          <div>累计掌握 <b id="wordTotalCount">0</b> 个</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-row">
+          <span class="card-title pink">学习计划</span>
+          <button id="addPlanBtn" class="btn-mini">＋ 新增</button>
+        </div>
+        <ul class="plan-list" id="planList"></ul>
+        <div class="form-row" id="planAdd" hidden>
+          <input id="planInput" placeholder="例如：每天背 20 个单词" />
+          <select id="planCycle">
+            <option value="daily">每日</option>
+            <option value="weekly">每周</option>
+            <option value="monthly">每月</option>
+          </select>
+          <button id="planSave" class="btn-pink">保存</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title pink">连续打卡日历</div>
+        <div class="streak-grid" id="streakGrid"></div>
+      </div>
+    </section>
+
+    <!-- 记账 -->
+    <section class="page" id="page-ledger">
+      <div class="page-header pink">
+        <div class="left">
+          <img src="./assets/icons/ledger.svg" alt="" class="header-ico" />
+          <span class="page-title">记账</span>
+        </div>
+        <span class="page-date" id="ledgerDate"></span>
+      </div>
+      <div class="card hero-ledger">
+        <img src="./assets/kitty-hero.svg" alt="" class="led-illu" />
+        <div class="hero-motto">
+          <div class="motto-cn pink">钱要理清楚</div>
+          <div class="motto-sub">每一笔都明明白白</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title pink">本月收支 <span id="ledgerMonth" class="muted"></span></div>
+        <div class="ledger-summary">
+          <div class="sum-item income">
+            <span class="star">★</span>
+            <div class="sum-val">¥<span id="sumIncome">0.00</span></div>
+            <div class="sum-label">收入</div>
+          </div>
+          <div class="sum-item expense">
+            <span class="star">★</span>
+            <div class="sum-val">¥<span id="sumExpense">0.00</span></div>
+            <div class="sum-label">支出</div>
+          </div>
+        </div>
+        <div class="balance">本月结余 <b id="sumBalance">¥0.00</b></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title pink">新增一笔</div>
+        <div class="form-row">
+          <select id="leType">
+            <option value="expense">支出</option>
+            <option value="income">收入</option>
+          </select>
+          <select id="leCategory">
+            <option>餐饮</option><option>交通</option><option>购物</option>
+            <option>娱乐</option><option>学习</option><option>居家</option>
+            <option>工资</option><option>红包</option><option>其他</option>
+          </select>
+          <input id="leAmount" type="number" placeholder="金额" />
+          <input id="leNote" placeholder="备注（可选）" />
+          <button id="leAdd" class="btn-pink">记一笔</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-row">
+          <span class="card-title pink">收支明细</span>
+          <button id="leReset" class="btn-mini ghost">清空本月</button>
+        </div>
+        <ul class="ledger-list" id="ledgerList"></ul>
+      </div>
+    </section>
+
+    <!-- 锻炼 -->
+    <section class="page" id="page-exercise">
+      <div class="page-header pink">
+        <div class="left">
+          <img src="./assets/icons/run.svg" alt="" class="header-ico" />
+          <span class="page-title">锻炼</span>
+        </div>
+        <span class="page-date" id="sportDate"></span>
+      </div>
+      <div class="card">
+        <div class="card-title pink">今日锻炼打卡</div>
+        <div class="sport-quick">
+          <button data-sport="跑步" class="btn-soft">跑步</button>
+          <button data-sport="瑜伽" class="btn-soft">瑜伽</button>
+          <button data-sport="跳绳" class="btn-soft">跳绳</button>
+          <button data-sport="力量" class="btn-soft">力量</button>
+          <button data-sport="散步" class="btn-soft">散步</button>
+          <button data-sport="骑行" class="btn-soft">骑行</button>
+        </div>
+        <div class="sport-stats">
+          <div>本周已运动 <b id="sportWeek">0</b> 次</div>
+          <div>累计 <b id="sportTotal">0</b> 次</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-row">
+          <span class="card-title pink">今日记录</span>
+          <span class="muted">支持自填</span>
+        </div>
+        <div class="form-row">
+          <input id="sportName" placeholder="运动项目" />
+          <input id="sportMin" type="number" placeholder="时长(分钟)" />
+          <button id="sportAdd" class="btn-pink">＋ 记录</button>
+        </div>
+        <ul class="ledger-list" id="sportList"></ul>
+      </div>
+      <div class="card">
+        <div class="card-title pink">本周运动日历</div>
+        <div class="week-grid" id="sportWeekGrid"></div>
+      </div>
+    </section>
+
+    <!-- 新闻热点 -->
+    <section class="page" id="page-news">
+      <div class="page-header pink">
+        <div class="left">
+          <img src="./assets/icons/fire.svg" alt="" class="header-ico" />
+          <span class="page-title">新闻热点</span>
+        </div>
+        <span class="page-date" id="newsDate"></span>
+      </div>
+      <div class="card">
+        <div class="card-title pink">今日要闻</div>
+        <ul class="news-list" id="newsList"></ul>
+      </div>
+      <div class="card">
+        <div class="card-row">
+          <span class="card-title pink">我的关注</span>
+          <button id="addNewsBtn" class="btn-mini">＋ 添加</button>
+        </div>
+        <ul class="follow-list" id="followList"></ul>
+        <div class="form-row" id="followAdd" hidden>
+          <input id="followInput" placeholder="想关注的话题，例如：AI 新进展" />
+          <button id="followSave" class="btn-pink">保存</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 理财 -->
+    <section class="page" id="page-finance">
+      <div class="page-header pink">
+        <div class="left">
+          <img src="./assets/icons/money.svg" alt="" class="header-ico" />
+          <span class="page-title">理财</span>
+        </div>
+        <span class="page-date" id="finDate"></span>
+      </div>
+      <div class="card">
+        <div class="card-title pink">我的资产</div>
+        <div class="fin-total">
+          <div class="muted">总资产(¥)</div>
+          <div class="big" id="finTotal">0.00</div>
+        </div>
+        <div class="fin-grid">
+          <div class="fin-card"><div class="muted">余额</div><div id="finBalance">0.00</div></div>
+          <div class="fin-card"><div class="muted">基金</div><div id="finFund">0.00</div></div>
+          <div class="fin-card"><div class="muted">存款</div><div id="finSaving">0.00</div></div>
+          <div class="fin-card"><div class="muted">其他</div><div id="finOther">0.00</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title pink">更新资产</div>
+        <div class="form-row">
+          <input id="finInput" type="number" placeholder="金额" />
+          <select id="finKind">
+            <option value="balance">余额</option>
+            <option value="fund">基金</option>
+            <option value="saving">存款</option>
+            <option value="other">其他</option>
+          </select>
+          <button id="finAdd" class="btn-pink">＋ 增加</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title pink">理财目标</div>
+        <div class="form-row">
+          <input id="goalName" placeholder="目标名称，例如：旅行基金" />
+          <input id="goalAmt" type="number" placeholder="目标金额" />
+          <input id="goalSaved" type="number" placeholder="已存" />
+          <button id="goalAdd" class="btn-pink">＋ 新增</button>
+        </div>
+        <ul class="goal-list" id="goalList"></ul>
+      </div>
+    </section>
+
+    <!-- 备忘录 -->
+    <section class="page" id="page-memo">
+      <div class="page-header pink">
+        <div class="left">
+          <img src="./assets/icons/memo.svg" alt="" class="header-ico" />
+          <span class="page-title">备忘录</span>
+        </div>
+        <span class="page-date" id="memoDate"></span>
+      </div>
+      <div class="card">
+        <div class="card-title pink">写点什么吧</div>
+        <textarea id="memoInput" placeholder="记录今天的小灵感..."></textarea>
+        <div class="memo-actions">
+          <button id="memoSave" class="btn-pink">保存</button>
+          <button id="memoExport" class="btn-soft">导出全部</button>
+          <button id="memoClear" class="btn-mini ghost">清空</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title pink">我的备忘录</div>
+        <ul class="memo-list" id="memoList"></ul>
+      </div>
+    </section>
+
+    <!-- 待办四象限 -->
+    <section class="page" id="page-todo">
+      <div class="page-header pink">
+        <div class="left">
+          <img src="./assets/icons/todo.svg" alt="" class="header-ico" />
+          <span class="page-title">待办事项</span>
+        </div>
+        <span class="page-date" id="todoDate"></span>
+      </div>
+      <div class="card">
+        <div class="card-title pink">新增待办</div>
+        <div class="form-row">
+          <input id="todoInput" placeholder="要做的事..." />
+          <select id="todoQuadrant">
+            <option value="urgent">紧急</option>
+            <option value="middle">中等</option>
+            <option value="slow">缓</option>
+            <option value="plan">计划</option>
+          </select>
+          <button id="todoAdd" class="btn-pink">＋ 添加</button>
+        </div>
+      </div>
+      <div class="quadrant">
+        <div class="q-card q-urgent">
+          <div class="q-title">紧急</div>
+          <ul class="q-list" data-q="urgent"></ul>
+        </div>
+        <div class="q-card q-middle">
+          <div class="q-title">中等</div>
+          <ul class="q-list" data-q="middle"></ul>
+        </div>
+        <div class="q-card q-slow">
+          <div class="q-title">缓</div>
+          <ul class="q-list" data-q="slow"></ul>
+        </div>
+        <div class="q-card q-plan">
+          <div class="q-title">计划</div>
+          <ul class="q-list" data-q="plan"></ul>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-row">
+          <span class="card-title pink">已完成</span>
+          <span class="muted" id="doneCount">0 项</span>
+        </div>
+        <ul class="done-list" id="doneList"></ul>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+<button class="menu-toggle" id="menuToggle">☰</button>
+
+<!-- 安装到主屏幕引导 -->
+<div class="install-tip" id="installTip">
+  <div class="tip-head" id="installHead">添加到主屏幕</div>
+  <div class="tip-body" id="installBody"></div>
+  <div class="tip-actions">
+    <button class="close-tip" id="installLater">以后再说</button>
+    <button class="got-it" id="installGot">明白了</button>
+  </div>
+</div>
+
+<!-- 换装面板 -->
+<div class="cust-overlay" id="custOverlay">
+  <div class="cust-panel">
+    <div class="cust-head">
+      <h3>换装中心</h3>
+      <button class="cust-close" id="custClose">✕</button>
+    </div>
+    <div class="cust-tabs">
+      <button class="cust-tab active" data-pane="images">图片</button>
+      <button class="cust-tab" data-pane="theme">配色</button>
+      <button class="cust-tab" data-pane="nick">昵称</button>
+    </div>
+    <div class="cust-body">
+
+      <!-- 图片 -->
+      <div class="cust-pane active" data-pane="images">
+        <div class="cust-section">
+          <div class="sec-title">整体背景</div>
+          <div class="cust-item" data-key="bg">
+            <div class="preview">预览</div>
+            <div class="info">
+              <div class="name">背景纹理图</div>
+              <div class="hint">建议 400×400 平铺图案</div>
+            </div>
+            <div class="ops">
+              <button class="upload-btn">上传</button>
+              <button class="reset-btn">重置</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="cust-section">
+          <div class="sec-title">头像与装饰</div>
+          <div class="cust-item" data-key="avatar">
+            <div class="preview">预览</div>
+            <div class="info">
+              <div class="name">侧边栏头像</div>
+              <div class="hint">建议方形 PNG/JPG</div>
+            </div>
+            <div class="ops">
+              <button class="upload-btn">上传</button>
+              <button class="reset-btn">重置</button>
+            </div>
+          </div>
+          <div class="cust-item" data-key="hero">
+            <div class="preview">预览</div>
+            <div class="info">
+              <div class="name">首页 Hero 大图</div>
+              <div class="hint">首页和记账页都会用</div>
+            </div>
+            <div class="ops">
+              <button class="upload-btn">上传</button>
+              <button class="reset-btn">重置</button>
+            </div>
+          </div>
+          <div class="cust-item" data-key="sideBottom">
+            <div class="preview">预览</div>
+            <div class="info">
+              <div class="name">侧边栏底部装饰</div>
+              <div class="hint">圆形头像位置</div>
+            </div>
+            <div class="ops">
+              <button class="upload-btn">上传</button>
+              <button class="reset-btn">重置</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="cust-section">
+          <div class="sec-title">导航图标（8 个）</div>
+          <div class="cust-item" data-key="nav.today" data-default="./assets/kitty.svg">
+            <div class="preview">预览</div>
+            <div class="info"><div class="name">今日计划</div></div>
+            <div class="ops">
+              <button class="upload-btn">上传</button>
+              <button class="reset-btn">重置</button>
+            </div>
+          </div>
+          <div class="cust-item" data-key="nav.english" data-default="./assets/icons/book.svg">
+            <div class="preview">预览</div>
+            <div class="info"><div class="name">英语学习</div></div>
+            <div class="ops">
+              <button class="upload-btn">上传</button>
+              <button class="reset-btn">重置</button>
+            </div>
+          </div>
+          <div class="cust-item" data-key="nav.ledger" data-default="./assets/icons/ledger.svg">
+            <div class="preview">预览</div>
+            <div class="info"><div class="name">记账</div></div>
+            <div class="ops">
+              <button class="upload-btn">上传</button>
+              <button class="reset-btn">重置</button>
+            </div>
+          </div>
+          <div class="cust-item" data-key="nav.exercise" data-default="./assets/icons/run.svg">
+            <div class="preview">预览</div>
+            <div class="info"><div class="name">锻炼</div></div>
+            <div class="ops">
+              <button class="upload-btn">上传</button>
+              <button class="reset-btn">重置</button>
+            </div>
+          </div>
+          <div class="cust-item" data-key="nav.news" data-default="./assets/icons/fire.svg">
+            <div class="preview">预览</div>
+            <div class="info"><div class="name">新闻热点</div></div>
+            <div class="ops">
+              <button class="upload-btn">上传</button>
+              <button class="reset-btn">重置</button>
+            </div>
+          </div>
+          <div class="cust-item" data-key="nav.finance" data-default="./assets/icons/money.svg">
+            <div class="preview">预览</div>
+            <div class="info"><div class="name">理财</div></div>
+            <div class="ops">
+              <button class="upload-btn">上传</button>
+              <button class="reset-btn">重置</button>
+            </div>
+          </div>
+          <div class="cust-item" data-key="nav.memo" data-default="./assets/icons/memo.svg">
+            <div class="preview">预览</div>
+            <div class="info"><div class="name">备忘录</div></div>
+            <div class="ops">
+              <button class="upload-btn">上传</button>
+              <button class="reset-btn">重置</button>
+            </div>
+          </div>
+          <div class="cust-item" data-key="nav.todo" data-default="./assets/icons/todo.svg">
+            <div class="preview">预览</div>
+            <div class="info"><div class="name">待办事项</div></div>
+            <div class="ops">
+              <button class="upload-btn">上传</button>
+              <button class="reset-btn">重置</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="cust-section">
+          <div class="sec-title">首页小图标（4 个）</div>
+          <div class="cust-item" data-key="pageIco.cal" data-default="./assets/icons/cal.svg">
+            <div class="preview">预览</div>
+            <div class="info"><div class="name">日历图标</div></div>
+            <div class="ops">
+              <button class="upload-btn">上传</button>
+              <button class="reset-btn">重置</button>
+            </div>
+          </div>
+          <div class="cust-item" data-key="pageIco.check" data-default="./assets/icons/check.svg">
+            <div class="preview">预览</div>
+            <div class="info"><div class="name">对勾图标</div></div>
+            <div class="ops">
+              <button class="upload-btn">上传</button>
+              <button class="reset-btn">重置</button>
+            </div>
+          </div>
+          <div class="cust-item" data-key="pageIco.heart" data-default="./assets/icons/heart.svg">
+            <div class="preview">预览</div>
+            <div class="info"><div class="name">爱心图标</div></div>
+            <div class="ops">
+              <button class="upload-btn">上传</button>
+              <button class="reset-btn">重置</button>
+            </div>
+          </div>
+          <div class="cust-item" data-key="pageIco.clock" data-default="./assets/icons/clock.svg">
+            <div class="preview">预览</div>
+            <div class="info"><div class="name">时钟图标</div></div>
+            <div class="ops">
+              <button class="upload-btn">上传</button>
+              <button class="reset-btn">重置</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 配色 -->
+      <div class="cust-pane" data-pane="theme">
+        <h4>选择一套主题色</h4>
+        <div class="cust-grid" id="themeGrid"></div>
+      </div>
+
+      <!-- 昵称 -->
+      <div class="cust-pane" data-pane="nick">
+        <h4>侧边栏昵称</h4>
+        <div class="cust-nick-row">
+          <input id="nickInput" placeholder="例如：小龙" maxlength="8" />
+          <button id="nickSave">保存</button>
+        </div>
+      </div>
+
+    </div>
+    <div class="cust-footer">
+      <button class="reset-all" id="resetAllBtn">全部重置</button>
+      <button class="save-all" id="saveAllBtn">完成</button>
+    </div>
+  </div>
+</div>
+
+<script src="./app.js"></script>
+</body>
+</html>

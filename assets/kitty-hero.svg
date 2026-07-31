@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <radialGradient id="bg2" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#fff5f8"/>
+      <stop offset="100%" stop-color="#ffd6e2"/>
+    </radialGradient>
+    <linearGradient id="bow2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ff7aa8"/>
+      <stop offset="100%" stop-color="#ff5a8d"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" fill="url(#bg2)"/>
+  <!-- 装饰小元素 -->
+  <g opacity="0.5">
+    <text x="20" y="30" font-size="14">🎀</text>
+    <text x="160" y="40" font-size="12">☁️</text>
+    <text x="170" y="170" font-size="14">⭐</text>
+    <text x="30" y="180" font-size="12">💗</text>
+  </g>
+  <!-- 左耳 -->
+  <path d="M40,70 Q25,30 50,30 Q72,35 75,75 Z" fill="#fff" stroke="#3a2a32" stroke-width="2"/>
+  <!-- 右耳 -->
+  <path d="M160,70 Q175,30 150,30 Q128,35 125,75 Z" fill="#fff" stroke="#3a2a32" stroke-width="2"/>
+  <!-- 脸 -->
+  <ellipse cx="100" cy="115" rx="65" ry="60" fill="#fff" stroke="#3a2a32" stroke-width="2"/>
+  <!-- 蝴蝶结（顶部） -->
+  <g transform="translate(80,55)">
+    <ellipse cx="-12" cy="0" rx="14" ry="11" fill="url(#bow2)" stroke="#3a2a32" stroke-width="1.5"/>
+    <ellipse cx="12" cy="0" rx="14" ry="11" fill="url(#bow2)" stroke="#3a2a32" stroke-width="1.5"/>
+    <circle cx="0" cy="0" r="6.5" fill="#ff5a8d" stroke="#3a2a32" stroke-width="1.2"/>
+    <path d="M-22,2 Q-26,8 -22,10" fill="#fff" stroke="#3a2a32" stroke-width="1"/>
+    <path d="M22,2 Q26,8 22,10" fill="#fff" stroke="#3a2a32" stroke-width="1"/>
+  </g>
+  <!-- 眼睛 -->
+  <ellipse cx="74" cy="115" rx="5" ry="7" fill="#3a2a32"/>
+  <ellipse cx="126" cy="115" rx="5" ry="7" fill="#3a2a32"/>
+  <circle cx="76" cy="112" r="2" fill="#fff"/>
+  <circle cx="128" cy="112" r="2" fill="#fff"/>
+  <!-- 鼻子 -->
+  <ellipse cx="100" cy="130" rx="4" ry="3" fill="#ffb1c6" stroke="#3a2a32" stroke-width="0.8"/>
+  <!-- 嘴 -->
+  <path d="M92,140 Q100,148 108,140" fill="none" stroke="#3a2a32" stroke-width="2" stroke-linecap="round"/>
+  <!-- 胡须 -->
+  <g stroke="#3a2a32" stroke-width="1.5" stroke-linecap="round">
+    <line x1="30" y1="125" x2="65" y2="132"/>
+    <line x1="30" y1="135" x2="65" y2="138"/>
+    <line x1="135" y1="132" x2="170" y2="125"/>
+    <line x1="135" y1="138" x2="170" y2="135"/>
+  </g>
+  <!-- 腮红 -->
+  <circle cx="60" cy="138" r="9" fill="#ffb1c6" opacity="0.6"/>
+  <circle cx="140" cy="138" r="9" fill="#ffb1c6" opacity="0.6"/>
+  <!-- 闪光 -->
+  <g fill="#ffb1c6" opacity="0.7">
+    <text x="180" y="60" font-size="16">✦</text>
+    <text x="10" y="100" font-size="14">✧</text>
+    <text x="155" y="100" font-size="14">✦</text>
+    <text x="50" y="50" font-size="14">✦</text>
+  </g>
+</svg>
