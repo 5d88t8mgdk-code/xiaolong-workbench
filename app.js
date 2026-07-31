@@ -30,7 +30,7 @@
     $('#todayDate').textContent = dateStr;
     $('#clockTime').textContent = pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());
     $('#clockDate').textContent = d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日 · '+wkMap[d.getDay()];
-    ['en','ledger','sport','news','fin','memo','todo'].forEach(k => {
+    ['en','ledger','sport','news','fin','memo','todo','nails'].forEach(k => {
       const el = $('#'+k+'Date'); if(el) el.textContent = dateStr;
     });
   }
@@ -1176,6 +1176,584 @@ if(!name){ toast('请输入运动项目'); return; }
     refreshTodo();
   }
 
+  // ====== 美甲板块 ======
+  const NAILS_STYLES_KEY = 'workbench_nails_styles';
+  const NAILS_GOALS_KEY = 'workbench_nails_goals';
+  const NAILS_PRACTICE_KEY = 'workbench_nails_practice';
+
+  const NAIL_TAG_DIMS = {
+    color:  ['红','粉','蓝','绿','紫','黑','白','裸色','多色'],
+    style:  ['温柔','酷','可爱','简约','复古','ins风'],
+    shape:  ['长甲','短甲','方形','圆形','杏仁型'],
+    scene:  ['日常','约会','节日','婚礼']
+  };
+  const NAIL_DIM_LABELS = {color:'颜色', style:'风格', shape:'甲型', scene:'场景'};
+
+  // 对话筛选关键词词典（核心）
+  const NAIL_KEYWORD_MAP = {
+    color: {
+      '红':'红','红色':'红','红色系':'红','大红':'红','酒红':'红','正红':'红',
+      '粉':'粉','粉色':'粉','粉色系':'粉','少女粉':'粉','蜜桃粉':'粉','樱花粉':'粉',
+      '蓝':'蓝','蓝色':'蓝','蓝色系':'蓝','天蓝':'蓝','湖蓝':'蓝','雾霾蓝':'蓝','克莱因蓝':'蓝',
+      '绿':'绿','绿色':'绿','绿色系':'绿','抹茶绿':'绿','薄荷绿':'绿','墨绿':'绿',
+      '紫':'紫','紫色':'紫','紫色系':'紫','香芋紫':'紫','丁香紫':'紫','薰衣草紫':'紫',
+      '黑':'黑','黑色':'黑','黑色系':'黑','纯黑':'黑','暗黑':'黑',
+      '白':'白','白色':'白','白色系':'白','纯白':'白','奶白':'白',
+      '裸':'裸色','裸色':'裸色','肉色':'裸色','豆沙':'裸色','奶茶色':'裸色',
+      '多色':'多色','彩色':'多色','拼色':'多色','渐变色':'多色','渐变':'多色','跳色':'多色','撞色':'多色'
+    },
+    style: {
+      '温柔':'温柔','温柔风':'温柔','软妹':'温柔','淑女':'温柔','气质':'温柔',
+      '酷':'酷','酷飒':'酷','帅气':'酷','暗黑风':'酷','辣妹':'酷','拽酷':'酷',
+      '可爱':'可爱','少女':'可爱','卡哇伊':'可爱','萌':'可爱','甜妹':'可爱','甜系':'可爱',
+      '简约':'简约','简单':'简约','极简':'简约','干净':'简约','素雅':'简约',
+      '复古':'复古','复古风':'复古','法式':'复古','vintage':'复古','中古':'复古',
+      'ins风':'ins风','ins':'ins风','网红风':'ins风','流行':'ins风','韩系':'ins风','欧美风':'ins风'
+    },
+    shape: {
+      '长甲':'长甲','长款':'长甲','加长':'长甲','延长甲':'长甲',
+      '短甲':'短甲','短款':'短甲','短指甲':'短甲',
+      '方形':'方形','方甲':'方形','平直':'方形',
+      '圆形':'圆形','圆甲':'圆形','圆润':'圆形',
+      '杏仁型':'杏仁型','杏仁':'杏仁型','椭圆':'杏仁型','橄榄':'杏仁型','水滴':'杏仁型'
+    },
+    scene: {
+      '日常':'日常','通勤':'日常','上班':'日常','生活':'日常','学生':'日常',
+      '约会':'约会','约会款':'约会','情侣':'约会','相亲':'约会',
+      '节日':'节日','过年':'节日','圣诞':'节日','新春':'节日','中秋':'节日','节庆':'节日',
+      '婚礼':'婚礼','新娘':'婚礼','婚宴':'婚礼','伴娘':'婚礼','出嫁':'婚礼','结婚':'婚礼'
+    }
+  };
+
+  function detectVideoPlatform(url){
+    if(!url) return '链接';
+    if(/bilibili\.com|b23\.tv/i.test(url)) return 'B站';
+    if(/douyin\.com|iesdouyin/i.test(url)) return '抖音';
+    if(/youtube\.com|youtu\.be/i.test(url)) return 'YouTube';
+    if(/xiaohongshu\.com|xhslink/i.test(url)) return '小红书';
+    return '链接';
+  }
+
+  function getNailStyles(){ return store.get(NAILS_STYLES_KEY, []); }
+  function setNailStyles(s){ store.set(NAILS_STYLES_KEY, s); }
+  function getNailGoals(){ return store.get(NAILS_GOALS_KEY, []); }
+  function setNailGoals(g){ store.set(NAILS_GOALS_KEY, g); }
+  function getNailPractice(){ return store.get(NAILS_PRACTICE_KEY, {}); }
+  function setNailPractice(p){ store.set(NAILS_PRACTICE_KEY, p); }
+
+  function bindNailsTabs(){
+    $$('#nailsTabs .tab-item').forEach(b => b.addEventListener('click', ()=>{
+      $$('#nailsTabs .tab-item').forEach(x=>x.classList.remove('active'));
+      $$('#page-nails .tab-pane').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      const t = b.dataset.ntab;
+      const pane = $('#page-nails .tab-pane[data-npane="'+t+'"]');
+      if(pane) pane.classList.add('active');
+    }));
+  }
+
+  // ====== 上传图片 ======
+  let nailUploadData = { img:null, tags:{color:[],style:[],shape:[],scene:[]} };
+  let nailTempVideos = [];
+
+  function renderNailTagChips(){
+    Object.keys(NAIL_TAG_DIMS).forEach(dim => {
+      const wrap = $('#nail'+dim.charAt(0).toUpperCase()+dim.slice(1)+'Tags');
+      if(!wrap) return;
+      wrap.innerHTML = '';
+      NAIL_TAG_DIMS[dim].forEach(v => {
+        const chip = document.createElement('button');
+        chip.className = 'nail-tag-chip';
+        chip.textContent = v;
+        chip.dataset.val = v;
+        chip.addEventListener('click', ()=>{
+          const arr = nailUploadData.tags[dim];
+          const idx = arr.indexOf(v);
+          if(idx >= 0){ arr.splice(idx,1); chip.classList.remove('selected'); }
+          else { arr.push(v); chip.classList.add('selected'); }
+        });
+        wrap.appendChild(chip);
+      });
+    });
+  }
+
+  function bindNailUpload(){
+    const fileInput = $('#nailFileInput');
+    const area = $('#nailUploadArea');
+    area.addEventListener('click', ()=> fileInput.click());
+    fileInput.addEventListener('change', e => {
+      const f = e.target.files[0];
+      if(!f) return;
+      compressImage(f, data => {
+        if(!data){ toast('图片读取失败'); return; }
+        nailUploadData.img = data;
+        const img = $('#nailUploadPreview');
+        img.src = data; img.style.display = 'block';
+        $('#nailUploadPlaceholder').style.display = 'none';
+      });
+    });
+
+    $('#nailUploadBtn').addEventListener('click', ()=>{
+      nailUploadData = { img:null, tags:{color:[],style:[],shape:[],scene:[]} };
+      const img = $('#nailUploadPreview');
+      img.style.display = 'none'; img.src = '';
+      $('#nailUploadPlaceholder').style.display = 'block';
+      $('#nailNoteInput').value = '';
+      $$('.nail-tag-chip').forEach(c => c.classList.remove('selected'));
+      openModal('nailUploadModal');
+    });
+
+    $('#nailUploadConfirm').addEventListener('click', ()=>{
+      if(!nailUploadData.img){ toast('请先选择图片'); return; }
+      const styles = getNailStyles();
+      styles.push({
+        id: 'nail_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+        img: nailUploadData.img,
+        tags: JSON.parse(JSON.stringify(nailUploadData.tags)),
+        note: $('#nailNoteInput').value.trim(),
+        createdAt: Date.now(),
+        date: todayKey()
+      });
+      setNailStyles(styles);
+      closeModal('nailUploadModal');
+      refreshNailLibrary();
+      toast('款式已保存');
+    });
+  }
+
+  // ====== 款式库渲染 + 筛选 ======
+  let nailFilterState = { keyword:'', tags:{} };
+
+  function renderNailTagFilters(){
+    const wrap = $('#nailTagFilters');
+    wrap.innerHTML = '';
+    Object.keys(NAIL_TAG_DIMS).forEach(dim => {
+      const label = document.createElement('span');
+      label.className = 'nail-filter-chip group-label';
+      label.textContent = NAIL_DIM_LABELS[dim]+':';
+      wrap.appendChild(label);
+      NAIL_TAG_DIMS[dim].forEach(v => {
+        const chip = document.createElement('button');
+        chip.className = 'nail-filter-chip';
+        chip.textContent = v;
+        chip.dataset.dim = dim;
+        chip.dataset.val = v;
+        const active = (nailFilterState.tags[dim]||[]).includes(v);
+        if(active) chip.classList.add('active');
+        chip.addEventListener('click', ()=>{
+          if(!nailFilterState.tags[dim]) nailFilterState.tags[dim] = [];
+          const arr = nailFilterState.tags[dim];
+          const idx = arr.indexOf(v);
+          if(idx >= 0) arr.splice(idx,1);
+          else arr.push(v);
+          renderNailTagFilters();
+          refreshNailLibrary();
+        });
+        wrap.appendChild(chip);
+      });
+    });
+  }
+
+  function filterNailStyles(){
+    let list = getNailStyles().slice().reverse();
+    const kw = nailFilterState.keyword.trim().toLowerCase();
+    if(kw){
+      list = list.filter(s => {
+        const note = (s.note||'').toLowerCase();
+        const allTags = Object.values(s.tags||{}).flat().join(' ').toLowerCase();
+        return note.includes(kw) || allTags.includes(kw);
+      });
+    }
+    Object.keys(nailFilterState.tags).forEach(dim => {
+      const selected = nailFilterState.tags[dim];
+      if(selected && selected.length > 0){
+        list = list.filter(s => {
+          const st = (s.tags&&s.tags[dim])||[];
+          return selected.some(v => st.includes(v));
+        });
+      }
+    });
+    return list;
+  }
+
+  function refreshNailLibrary(){
+    const list = filterNailStyles();
+    const grid = $('#nailGrid');
+    const empty = $('#nailEmpty');
+    grid.innerHTML = '';
+    if(list.length === 0){ empty.hidden = false; return; }
+    empty.hidden = true;
+    list.forEach(s => {
+      const card = document.createElement('div');
+      card.className = 'nail-card';
+      const allTags = Object.values(s.tags||{}).flat().slice(0,4);
+      card.innerHTML = `
+        <img src="${s.img}" alt="${s.note||'美甲款式'}" loading="lazy" />
+        <div class="nail-card-overlay">
+          ${s.note ? `<div>${s.note}</div>` : ''}
+          <div class="nail-card-tags">
+            ${allTags.map(t=>`<span class="nail-card-tag">${t}</span>`).join('')}
+          </div>
+        </div>`;
+      card.addEventListener('click', ()=> openNailViewer(s.id));
+      grid.appendChild(card);
+    });
+  }
+
+  function bindNailSearch(){
+    $('#nailSearch').addEventListener('input', e => {
+      nailFilterState.keyword = e.target.value;
+      refreshNailLibrary();
+    });
+    $('#nailClearFilter').addEventListener('click', ()=>{
+      nailFilterState = { keyword:'', tags:{} };
+      $('#nailSearch').value = '';
+      renderNailTagFilters();
+      refreshNailLibrary();
+      toast('已清除筛选');
+    });
+  }
+
+  function openNailViewer(id){
+    const s = getNailStyles().find(x=>x.id===id);
+    if(!s) return;
+    $('#nailViewerImg').src = s.img;
+    $('#nailViewerTitle').textContent = s.note || '款式详情';
+    $('#nailViewerNote').textContent = s.note || '';
+    $('#nailViewerDate').textContent = '上传于 '+s.date;
+    const tagWrap = $('#nailViewerTags');
+    tagWrap.innerHTML = '';
+    Object.keys(s.tags||{}).forEach(dim => {
+      (s.tags[dim]||[]).forEach(v => {
+        const t = document.createElement('span');
+        t.className = 'nv-tag';
+        t.textContent = NAIL_DIM_LABELS[dim]+'·'+v;
+        tagWrap.appendChild(t);
+      });
+    });
+    $('#nailViewerDelete').dataset.id = id;
+    openModal('nailViewerModal');
+  }
+
+  function bindNailViewer(){
+    $('#nailViewerDelete').addEventListener('click', e => {
+      const id = e.target.dataset.id;
+      if(!id) return;
+      if(!confirm('删除这个款式？')) return;
+      setNailStyles(getNailStyles().filter(x=>x.id!==id));
+      closeModal('nailViewerModal');
+      refreshNailLibrary();
+      toast('已删除');
+    });
+  }
+
+  // ====== 风格分析（对话筛选）======
+  function parseNailQuery(text){
+    text = (text||'').trim().toLowerCase();
+    if(!text) return null;
+    const intent = { color:[], style:[], shape:[], scene:[], raw:text };
+    let matched = false;
+    Object.keys(NAIL_KEYWORD_MAP).forEach(dim => {
+      const dict = NAIL_KEYWORD_MAP[dim];
+      const found = new Set();
+      Object.keys(dict).forEach(kw => {
+        if(text.indexOf(kw) >= 0){ found.add(dict[kw]); matched = true; }
+      });
+      intent[dim] = Array.from(found);
+    });
+    return matched ? intent : null;
+  }
+
+  function searchNailStyles(intent){
+    let list = getNailStyles().slice();
+    ['color','style','shape','scene'].forEach(dim => {
+      const wanted = intent[dim];
+      if(wanted && wanted.length > 0){
+        list = list.filter(s => {
+          const st = (s.tags && s.tags[dim]) || [];
+          return wanted.some(v => st.includes(v));
+        });
+      }
+    });
+    return list;
+  }
+
+  function buildNailAssistantReply(intent, results){
+    const parts = [];
+    if(intent.color.length) parts.push(intent.color.join('、')+'系');
+    if(intent.style.length) parts.push(intent.style.join('、')+'风');
+    if(intent.shape.length) parts.push(intent.shape.join('、'));
+    if(intent.scene.length) parts.push('适合'+intent.scene.join('、'));
+    const desc = parts.length ? parts.join(' · ') : '相关';
+    if(results.length === 0){
+      return `还没有${desc}的款式呢，去款式库添加几张吧～ 💅\n你可以说「粉色可爱风」「适合婚礼的」让我再帮你找找`;
+    }
+    let msg = `找到 ${results.length} 款${desc}的美甲`;
+    if(results.length <= 3){ msg += '，看看哪款心动～ ✨'; }
+    else { msg += '，先看前 6 款吧～ 💕'; }
+    return msg;
+  }
+
+  function handleNailChat(){
+    const input = $('#nailChatInput');
+    const text = input.value.trim();
+    if(!text) return;
+    const bubble = $('#nailChatBubble');
+    const userMsg = document.createElement('div');
+    userMsg.style.cssText = 'margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);color:var(--pink-700);font-weight:600;';
+    userMsg.textContent = '🧑 '+text;
+    bubble.appendChild(userMsg);
+
+    const replyWrap = document.createElement('div');
+    replyWrap.style.cssText = 'margin-top:8px;';
+    const resultsWrap = $('#nailChatResults');
+    const intent = parseNailQuery(text);
+
+    if(!intent){
+      replyWrap.innerHTML = `没太看懂呢～试试说「蓝色系温柔风」「适合约会的款式」「复古长甲」让我帮你找 💅`;
+      bubble.appendChild(replyWrap);
+      resultsWrap.innerHTML = '';
+      input.value = '';
+      return;
+    }
+
+    const results = searchNailStyles(intent);
+    const reply = buildNailAssistantReply(intent, results);
+    replyWrap.textContent = '💅 '+reply;
+    bubble.appendChild(replyWrap);
+
+    resultsWrap.innerHTML = '';
+    if(results.length > 0){
+      const grid = document.createElement('div');
+      grid.className = 'nail-chat-result-grid';
+      results.slice(0,6).forEach(s => {
+        const card = document.createElement('div');
+        card.className = 'nail-card';
+        const allTags = Object.values(s.tags||{}).flat().slice(0,3);
+        card.innerHTML = `
+          <img src="${s.img}" alt="${s.note||''}" loading="lazy" />
+          <div class="nail-card-overlay">
+            ${s.note?`<div>${s.note}</div>`:''}
+            <div class="nail-card-tags">${allTags.map(t=>`<span class="nail-card-tag">${t}</span>`).join('')}</div>
+          </div>`;
+        card.addEventListener('click', ()=> openNailViewer(s.id));
+        grid.appendChild(card);
+      });
+      resultsWrap.appendChild(grid);
+    }
+    input.value = '';
+  }
+
+  function bindNailChat(){
+    const submit = $('#nailChatSubmit');
+    const input = $('#nailChatInput');
+    submit.addEventListener('click', handleNailChat);
+    input.addEventListener('keydown', e => { if(e.key === 'Enter') handleNailChat(); });
+  }
+
+  // ====== 技能练习 ======
+  function renderNailGoalList(){
+    const goals = getNailGoals();
+    const wrap = $('#nailGoalList');
+    wrap.innerHTML = '';
+    if(goals.length === 0){
+      wrap.innerHTML = '<div class="card" style="text-align:center;color:var(--ink-soft);font-size:13px;">还没有练习目标，点击右上角「新建」创建吧 ✨</div>';
+      return;
+    }
+    goals.forEach(g => {
+      const card = document.createElement('div');
+      card.className = 'nail-goal-card';
+      let videoHtml = '';
+      if(g.videos && g.videos.length > 0){
+        videoHtml = '<div class="nail-video-list">' +
+          g.videos.map(v => `
+            <div class="nail-video-item">
+              <span class="nv-platform">${v.platform}</span>
+              <a href="${v.url}" target="_blank" rel="noopener" class="nv-title">${v.title||v.url}</a>
+            </div>`).join('') + '</div>';
+      }
+      card.innerHTML = `
+        <div class="nail-goal-head">
+          <div class="nail-goal-ico"><img src="./assets/icons/target.svg" alt=""></div>
+          <div class="nail-goal-info">
+            <div class="nail-goal-name">${g.name}</div>
+            ${g.desc ? `<div class="nail-goal-desc">${g.desc}</div>` : ''}
+          </div>
+          <button class="nail-goal-del" data-id="${g.id}">✕</button>
+        </div>
+        ${g.note ? `<div class="nail-goal-note">📝 ${g.note}</div>` : ''}
+        ${videoHtml}
+        <div class="nail-goal-actions">
+          <button class="nv-add-btn" data-id="${g.id}">＋ 添加视频</button>
+          <button class="nv-del-goal" data-id="${g.id}">删除目标</button>
+        </div>`;
+      wrap.appendChild(card);
+    });
+    wrap.querySelectorAll('.nv-del-goal').forEach(b => b.addEventListener('click', e=>{
+      if(!confirm('删除这个练习目标？')) return;
+      setNailGoals(getNailGoals().filter(g=>g.id!==e.target.dataset.id));
+      renderNailGoalList();
+      refreshNailPractice();
+    }));
+    wrap.querySelectorAll('.nv-add-btn').forEach(b => b.addEventListener('click', e=>{
+      const id = e.target.dataset.id;
+      const goal = getNailGoals().find(g=>g.id===id);
+      if(!goal) return;
+      nailTempVideos = goal.videos ? goal.videos.slice() : [];
+      $('#nailGoalName').value = goal.name;
+      $('#nailGoalDesc').value = goal.desc || '';
+      $('#nailGoalNote').value = goal.note || '';
+      $('#nailGoalName').dataset.editId = id;
+      renderNailTempVideos();
+      openModal('nailGoalModal');
+    }));
+  }
+
+  function renderNailTempVideos(){
+    const wrap = $('#nailVideoLinks');
+    wrap.innerHTML = '';
+    nailTempVideos.forEach((v, i) => {
+      const item = document.createElement('div');
+      item.className = 'nail-video-item';
+      item.innerHTML = `
+        <span class="nv-platform">${v.platform}</span>
+        <span class="nv-title">${v.title||v.url}</span>
+        <button class="nv-del" data-i="${i}">✕</button>`;
+      wrap.appendChild(item);
+    });
+    wrap.querySelectorAll('.nv-del').forEach(b => b.addEventListener('click', e=>{
+      nailTempVideos.splice(+e.target.dataset.i, 1);
+      renderNailTempVideos();
+    }));
+  }
+
+  function bindNailGoalModal(){
+    $('#nailAddGoalBtn').addEventListener('click', ()=>{
+      nailTempVideos = [];
+      $('#nailGoalName').value = '';
+      $('#nailGoalDesc').value = '';
+      $('#nailGoalNote').value = '';
+      $('#nailGoalName').dataset.editId = '';
+      renderNailTempVideos();
+      openModal('nailGoalModal');
+    });
+    $('#nailVideoAdd').addEventListener('click', ()=>{
+      const url = $('#nailVideoUrl').value.trim();
+      if(!url){ toast('请输入链接'); return; }
+      nailTempVideos.push({ url: url, title: detectVideoPlatform(url)+' 视频', platform: detectVideoPlatform(url) });
+      $('#nailVideoUrl').value = '';
+      renderNailTempVideos();
+    });
+    $('#nailGoalConfirm').addEventListener('click', ()=>{
+      const name = $('#nailGoalName').value.trim();
+      if(!name){ toast('请输入目标名称'); return; }
+      const editId = $('#nailGoalName').dataset.editId;
+      if(editId){
+        const goals = getNailGoals();
+        const g = goals.find(x=>x.id===editId);
+        if(g){
+          g.name = name;
+          g.desc = $('#nailGoalDesc').value.trim();
+          g.note = $('#nailGoalNote').value.trim();
+          g.videos = nailTempVideos.slice();
+        }
+        setNailGoals(goals);
+        toast('已更新');
+      } else {
+        const goals = getNailGoals();
+        goals.push({
+          id: 'g_nail_'+Date.now()+'_'+Math.random().toString(36).slice(2,5),
+          name: name,
+          desc: $('#nailGoalDesc').value.trim(),
+          note: $('#nailGoalNote').value.trim(),
+          videos: nailTempVideos.slice(),
+          createdAt: Date.now()
+        });
+        setNailGoals(goals);
+        toast('目标已创建');
+      }
+      closeModal('nailGoalModal');
+      renderNailGoalList();
+      refreshNailPractice();
+    });
+  }
+
+  function refreshNailPractice(){
+    const goals = getNailGoals();
+    const practice = getNailPractice();
+    const todayKeyStr = todayKey();
+    const todayData = practice[todayKeyStr] || { goals: [] };
+    const todayGoals = todayData.goals || [];
+
+    $('#nailTodayLabel').textContent = todayKeyStr;
+    $('#nailGoalCount').textContent = goals.length;
+
+    const list = $('#nailPracticeList');
+    list.innerHTML = '';
+    if(goals.length === 0){
+      list.innerHTML = '<div style="text-align:center;color:var(--ink-soft);font-size:13px;padding:10px;">先创建练习目标吧～</div>';
+    } else {
+      goals.forEach(g => {
+        const done = todayGoals.includes(g.id);
+        const item = document.createElement('div');
+        item.className = 'nail-practice-item' + (done?' done':'');
+        item.innerHTML = `<span class="np-name">${g.name}</span><span class="np-chk"></span>`;
+        item.addEventListener('click', ()=>{
+          const prac = getNailPractice();
+          const td = prac[todayKeyStr] || { goals: [] };
+          if(!td.goals) td.goals = [];
+          const idx = td.goals.indexOf(g.id);
+          if(idx >= 0) td.goals.splice(idx, 1);
+          else td.goals.push(g.id);
+          prac[todayKeyStr] = td;
+          setNailPractice(prac);
+          refreshNailPractice();
+        });
+        list.appendChild(item);
+      });
+    }
+
+    const allDates = Object.keys(practice);
+    let totalChecks = 0;
+    allDates.forEach(d => { totalChecks += (practice[d].goals||[]).length; });
+    $('#nailPracticeDays').textContent = allDates.filter(d => (practice[d].goals||[]).length > 0).length;
+    $('#nailPracticeCount').textContent = totalChecks;
+    renderNailHeatmap();
+  }
+
+  function renderNailHeatmap(){
+    const g = $('#nailHeatmap');
+    g.innerHTML = '';
+    const practice = getNailPractice();
+    const today = new Date();
+    for(let i=29; i>=0; i--){
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const k = d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+      const count = (practice[k] && practice[k].goals) ? practice[k].goals.length : 0;
+      const cell = document.createElement('div');
+      cell.className = 'hm-cell' +
+        (count>=3?' l4':count===2?' l3':count===1?' l2':'') +
+        (i===0?' today':'');
+      cell.title = k + ' · 练习 '+count+' 项';
+      g.appendChild(cell);
+    }
+  }
+
+  function bindNails(){
+    bindNailsTabs();
+    renderNailTagChips();
+    bindNailUpload();
+    renderNailTagFilters();
+    bindNailSearch();
+    bindNailViewer();
+    bindNailChat();
+    bindNailGoalModal();
+    renderNailGoalList();
+    refreshNailLibrary();
+    refreshNailPractice();
+  }
+
   // ====== 启动 ======
   // ====== 换装中心 ======
   const ASSETS_KEY = 'workbench_assets';
@@ -1197,6 +1775,7 @@ if(!name){ toast('请输入运动项目'); return; }
       finance: './assets/icons/money.svg',
       memo: './assets/icons/memo.svg',
       todo: './assets/icons/todo.svg',
+      nails: './assets/icons/nail.svg',
     },
     pageIco: {
       cal: './assets/icons/cal.svg',
@@ -1272,8 +1851,8 @@ if(!name){ toast('请输入运动项目'); return; }
     // 侧边栏底部
     const sideBottom = getAsset('sideBottom');
     $('.bot-kitty').src = sideBottom;
-    // 8 个导航图标
-    ['today','english','ledger','exercise','news','finance','memo','todo'].forEach(k => {
+    // 9 个导航图标
+    ['today','english','ledger','exercise','news','finance','memo','todo','nails'].forEach(k => {
       const img = $(`.nav-item[data-target="${k}"] .ico-img img`);
       if(img) img.src = getAsset('nav.'+k);
     });
@@ -1459,7 +2038,7 @@ if(!name){ toast('请输入运动项目'); return; }
         else if(img.classList.contains('hero-kitty') || img.classList.contains('led-illu')) img.src = DEFAULT_ASSETS.hero;
         else if(img.classList.contains('bot-kitty')) img.src = DEFAULT_ASSETS.sideBottom;
       });
-      ['today','english','ledger','exercise','news','finance','memo','todo'].forEach(k => {
+      ['today','english','ledger','exercise','news','finance','memo','todo','nails'].forEach(k => {
         const img = $(`.nav-item[data-target="${k}"] .ico-img img`);
         if(img) img.src = DEFAULT_ASSETS.nav[k];
       });
@@ -1507,6 +2086,7 @@ if(!name){ toast('请输入运动项目'); return; }
     bindFin();
     bindMemo();
     bindTodo();
+    bindNails();
     // 换装
     applyAssets();
     applyTheme(store.get(THEME_KEY, 'pink'));

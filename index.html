@@ -76,6 +76,10 @@
         <span class="ico-img"><img src="./assets/icons/todo.svg" alt=""></span>
         <span class="label">待办事项</span>
       </button>
+      <button class="nav-item" data-target="nails">
+        <span class="ico-img"><img src="./assets/icons/nail.svg" alt=""></span>
+        <span class="label">美甲</span>
+      </button>
     </nav>
     <button class="customize-btn" id="customizeBtn">
       <span class="icon-wrap"><img src="./assets/icons/customize.svg" alt="" style="width:20px;height:20px;"></span>
@@ -463,6 +467,99 @@
       </div>
     </div>
 
+    <!-- 上传美甲图片弹窗 -->
+    <div class="modal-overlay" id="nailUploadModal" hidden>
+      <div class="modal">
+        <div class="modal-head">
+          <h3>上传美甲款式</h3>
+          <button class="modal-close" data-close="nailUploadModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="nail-upload-area" id="nailUploadArea">
+            <div class="nail-upload-placeholder" id="nailUploadPlaceholder">
+              <span>📷</span>
+              <div>点击上传图片</div>
+              <div class="muted" style="font-size:11px;">支持 JPG/PNG，自动压缩到 500px</div>
+            </div>
+            <img id="nailUploadPreview" alt="" style="display:none;" />
+          </div>
+          <input type="file" id="nailFileInput" accept="image/*" hidden />
+          <div class="nail-tag-section">
+            <div class="nail-tag-group-title">颜色系</div>
+            <div class="nail-tag-chips" id="nailColorTags"></div>
+          </div>
+          <div class="nail-tag-section">
+            <div class="nail-tag-group-title">风格</div>
+            <div class="nail-tag-chips" id="nailStyleTags"></div>
+          </div>
+          <div class="nail-tag-section">
+            <div class="nail-tag-group-title">甲型</div>
+            <div class="nail-tag-chips" id="nailShapeTags"></div>
+          </div>
+          <div class="nail-tag-section">
+            <div class="nail-tag-group-title">场景</div>
+            <div class="nail-tag-chips" id="nailSceneTags"></div>
+          </div>
+          <div class="form-row" style="grid-template-columns:1fr;margin-top:10px;">
+            <input id="nailNoteInput" placeholder="备注（可选），如：情人节款" />
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-soft" data-close="nailUploadModal">取消</button>
+          <button id="nailUploadConfirm" class="btn-pink">保存款式</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 查看大图弹窗 -->
+    <div class="modal-overlay" id="nailViewerModal" hidden>
+      <div class="modal nail-viewer-modal">
+        <div class="modal-head">
+          <h3 id="nailViewerTitle">款式详情</h3>
+          <button class="modal-close" data-close="nailViewerModal">✕</button>
+        </div>
+        <div class="modal-body nail-viewer-body">
+          <img id="nailViewerImg" alt="" class="nail-viewer-img" />
+          <div class="nail-viewer-tags" id="nailViewerTags"></div>
+          <div class="nail-viewer-note" id="nailViewerNote"></div>
+          <div class="muted" id="nailViewerDate"></div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-soft" id="nailViewerDelete">删除</button>
+          <button class="btn-pink" data-close="nailViewerModal">关闭</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 新建练习目标弹窗 -->
+    <div class="modal-overlay" id="nailGoalModal" hidden>
+      <div class="modal">
+        <div class="modal-head">
+          <h3>练习目标</h3>
+          <button class="modal-close" data-close="nailGoalModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row" style="grid-template-columns:1fr;">
+            <input id="nailGoalName" placeholder="目标名称，如：水彩花卉" />
+            <input id="nailGoalDesc" placeholder="描述（可选）" />
+            <textarea id="nailGoalNote" placeholder="练习备注（可选）" style="min-height:60px;"></textarea>
+          </div>
+          <div class="nail-tag-section">
+            <div class="nail-tag-group-title">参考视频链接</div>
+            <div id="nailVideoLinks"></div>
+            <div class="form-row" style="grid-template-columns:1fr auto;margin-top:6px;">
+              <input id="nailVideoUrl" placeholder="粘贴 B站/抖音/YouTube 链接" />
+              <button id="nailVideoAdd" class="btn-mini">＋ 添加</button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-soft" data-close="nailGoalModal">取消</button>
+          <button id="nailGoalConfirm" class="btn-pink">保存</button>
+        </div>
+      </div>
+    </div>
+
     <!-- 锻炼 -->
     <section class="page" id="page-exercise">
       <div class="page-header pink">
@@ -651,6 +748,100 @@
       </div>
     </section>
 
+    <!-- 美甲 -->
+    <section class="page" id="page-nails">
+      <div class="page-header pink">
+        <div class="left">
+          <img src="./assets/icons/nail.svg" alt="" class="header-ico" />
+          <span class="page-title">美甲工坊</span>
+        </div>
+        <span class="page-date" id="nailsDate"></span>
+      </div>
+
+      <div class="tab-bar" id="nailsTabs">
+        <button class="tab-item active" data-ntab="library">款式库</button>
+        <button class="tab-item" data-ntab="chat">风格分析</button>
+        <button class="tab-item" data-ntab="practice">技能练习</button>
+      </div>
+
+      <!-- Tab 1: 款式库 -->
+      <div class="tab-pane active" data-npane="library">
+        <div class="card nail-filter-card">
+          <div class="form-row" style="grid-template-columns:1fr;">
+            <input id="nailSearch" placeholder="搜索备注或标签，如：情人节" />
+          </div>
+          <div class="nail-tag-filters" id="nailTagFilters"></div>
+          <div class="nail-filter-actions">
+            <button id="nailUploadBtn" class="btn-pink-small">＋ 上传新款式</button>
+            <button id="nailClearFilter" class="btn-mini ghost">清除筛选</button>
+          </div>
+        </div>
+        <div class="nail-grid" id="nailGrid"></div>
+        <div class="nail-empty" id="nailEmpty" hidden>
+          <div class="nail-empty-illu">💅</div>
+          <div>还没有款式，点击上方上传你的第一张美甲图吧～</div>
+        </div>
+      </div>
+
+      <!-- Tab 2: 风格分析 -->
+      <div class="tab-pane" data-npane="chat">
+        <div class="nail-chat-card">
+          <img src="./assets/icons/nail.svg" alt="" class="chat-avatar" />
+          <div class="chat-bubble" id="nailChatBubble">
+            <div>嗨～我是你的美甲小助手 Kitty 💅</div>
+            <div>告诉我你想要什么风格的美甲吧！</div>
+            <div>比如：「蓝色系温柔风短甲」「适合约会的款式」「复古风长甲」</div>
+          </div>
+        </div>
+        <div class="card chat-input-card">
+          <div class="form-row" style="grid-template-columns:1fr auto;">
+            <input id="nailChatInput" placeholder="试试：蓝色系温柔风短甲" />
+            <button id="nailChatSubmit" class="btn-pink">找款式</button>
+          </div>
+          <div class="chat-tip">支持自然语言：「粉色可爱风」「适合婚礼的」「ins风渐变甲」</div>
+        </div>
+        <div class="nail-chat-results" id="nailChatResults"></div>
+      </div>
+
+      <!-- Tab 3: 技能练习 -->
+      <div class="tab-pane" data-npane="practice">
+        <div class="card nail-stats-card">
+          <div class="nail-stat-row">
+            <div class="nail-stat-item">
+              <div class="nail-stat-num" id="nailPracticeDays">0</div>
+              <div class="muted">累计练习天数</div>
+            </div>
+            <div class="nail-stat-item">
+              <div class="nail-stat-num" id="nailPracticeCount">0</div>
+              <div class="muted">完成练习次数</div>
+            </div>
+            <div class="nail-stat-item">
+              <div class="nail-stat-num" id="nailGoalCount">0</div>
+              <div class="muted">练习目标</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-row">
+            <span class="card-title pink">今日练习打卡</span>
+            <span class="muted" id="nailTodayLabel">--</span>
+          </div>
+          <div class="nail-practice-list" id="nailPracticeList"></div>
+        </div>
+        <div class="card">
+          <div class="card-row">
+            <span class="card-title pink">练习热力图（近 30 天）</span>
+          </div>
+          <div class="nail-heatmap" id="nailHeatmap"></div>
+        </div>
+        <div class="card-row" style="margin-bottom:10px;">
+          <span class="card-title pink">练习目标</span>
+          <button id="nailAddGoalBtn" class="btn-mini">＋ 新建</button>
+        </div>
+        <div id="nailGoalList"></div>
+      </div>
+    </section>
+
   </main>
 </div>
 
@@ -736,7 +927,7 @@
         </div>
 
         <div class="cust-section">
-          <div class="sec-title">导航图标（8 个）</div>
+          <div class="sec-title">导航图标（9 个）</div>
           <div class="cust-item" data-key="nav.today" data-default="./assets/kitty.svg">
             <div class="preview">预览</div>
             <div class="info"><div class="name">今日计划</div></div>
@@ -796,6 +987,14 @@
           <div class="cust-item" data-key="nav.todo" data-default="./assets/icons/todo.svg">
             <div class="preview">预览</div>
             <div class="info"><div class="name">待办事项</div></div>
+            <div class="ops">
+              <button class="upload-btn">上传</button>
+              <button class="reset-btn">重置</button>
+            </div>
+          </div>
+          <div class="cust-item" data-key="nav.nails" data-default="./assets/icons/nail.svg">
+            <div class="preview">预览</div>
+            <div class="info"><div class="name">美甲</div></div>
             <div class="ops">
               <button class="upload-btn">上传</button>
               <button class="reset-btn">重置</button>
