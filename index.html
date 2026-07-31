@@ -217,66 +217,251 @@
       </div>
     </section>
 
-    <!-- 记账 -->
+    <!-- 记账（4321 四分存钱法） -->
     <section class="page" id="page-ledger">
       <div class="page-header pink">
         <div class="left">
-          <img src="./assets/icons/ledger.svg" alt="" class="header-ico" />
-          <span class="page-title">记账</span>
+          <img src="./assets/icons/sprout.svg" alt="" class="header-ico" />
+          <span class="page-title">财务储蓄</span>
         </div>
         <span class="page-date" id="ledgerDate"></span>
       </div>
-      <div class="card hero-ledger">
-        <img src="./assets/kitty-hero.svg" alt="" class="led-illu" />
-        <div class="hero-motto">
-          <div class="motto-cn pink">钱要理清楚</div>
-          <div class="motto-sub">每一笔都明明白白</div>
-        </div>
-      </div>
 
-      <div class="card">
-        <div class="card-title pink">本月收支 <span id="ledgerMonth" class="muted"></span></div>
-        <div class="ledger-summary">
-          <div class="sum-item income">
-            <span class="star">★</span>
-            <div class="sum-val">¥<span id="sumIncome">0.00</span></div>
-            <div class="sum-label">收入</div>
+      <!-- 本月收入卡片 -->
+      <div class="card income-card">
+        <div class="income-row">
+          <div>
+            <div class="muted">本月收入</div>
+            <div class="big-amount">¥<span id="monthIncome">0</span></div>
           </div>
-          <div class="sum-item expense">
-            <span class="star">★</span>
-            <div class="sum-val">¥<span id="sumExpense">0.00</span></div>
-            <div class="sum-label">支出</div>
+          <button id="setIncomeBtn" class="btn-pink-small">设置收入</button>
+        </div>
+        <div class="muted" style="margin-top:4px;font-size:11px;">每月 1 号自动重置 · 按 40/30/20/10 分配到 4 个存钱罐</div>
+      </div>
+
+      <!-- 4 个 tab 切换 -->
+      <div class="tab-bar" id="ledgerTabs">
+        <button class="tab-item active" data-tab="chat">对话记账</button>
+        <button class="tab-item" data-tab="pot">预算进度</button>
+        <button class="tab-item" data-tab="goal">储蓄目标</button>
+        <button class="tab-item" data-tab="plan">存钱</button>
+      </div>
+
+      <!-- Tab 1: 对话记账 -->
+      <div class="tab-pane active" data-pane="chat">
+        <div class="chat-card">
+          <img src="./assets/icons/sprout.svg" alt="" class="chat-avatar" />
+          <div class="chat-bubble">
+            <div>嗨～我是你的记账小伙伴小苗</div>
+            <div>直接发「刚需 外卖 36」</div>
+            <div>或者「奶茶 15」就能记账啦！</div>
+            <div>发「收入 8000」可以更新月收入哦～</div>
           </div>
         </div>
-        <div class="balance">本月结余 <b id="sumBalance">¥0.00</b></div>
-      </div>
 
-      <div class="card">
-        <div class="card-title pink">新增一笔</div>
-        <div class="form-row">
-          <select id="leType">
-            <option value="expense">支出</option>
-            <option value="income">收入</option>
-          </select>
-          <select id="leCategory">
-            <option>餐饮</option><option>交通</option><option>购物</option>
-            <option>娱乐</option><option>学习</option><option>居家</option>
-            <option>工资</option><option>红包</option><option>其他</option>
-          </select>
-          <input id="leAmount" type="number" placeholder="金额" />
-          <input id="leNote" placeholder="备注（可选）" />
-          <button id="leAdd" class="btn-pink">记一笔</button>
+        <div class="card chat-input-card">
+          <div class="form-row" style="grid-template-columns:1fr auto;">
+            <input id="chatInput" placeholder="试试：休闲 奶茶 15" />
+            <button id="chatSubmit" class="btn-pink">记一笔</button>
+          </div>
+          <div class="chat-tip">支持自然语言：「外卖36」「刚需 房租 2000」「收入 8000」</div>
+        </div>
+
+        <div class="card">
+          <div class="card-row">
+            <span class="card-title pink">本月账单（<span id="transCount">0</span> 笔）</span>
+            <button id="resetMonthBtn" class="btn-mini ghost">清空本月</button>
+          </div>
+          <ul class="chat-list" id="transList4321"></ul>
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-row">
-          <span class="card-title pink">收支明细</span>
-          <button id="leReset" class="btn-mini ghost">清空本月</button>
+      <!-- Tab 2: 预算进度 -->
+      <div class="tab-pane" data-pane="pot">
+        <div class="pot-intro">
+          <div class="card-title pink">四个存钱罐</div>
+          <div class="muted">满格=装满钱，消费从右往左取钱</div>
         </div>
-        <ul class="ledger-list" id="ledgerList"></ul>
+
+        <div class="pot-list">
+          <div class="pot-card" data-pot="need">
+            <div class="pot-head">
+              <img src="./assets/icons/pot-need.svg" class="pot-ico" alt="">
+              <div class="pot-meta">
+                <div class="pot-name">刚需支出</div>
+                <div class="pot-pct">40% · 房租/水电/三餐/日用品</div>
+              </div>
+              <div class="pot-left"><div class="pot-left-cap">剩余</div><b id="potNeedLeft">¥0</b></div>
+            </div>
+            <div class="pot-progress"><i id="potNeedBar" style="width:0%"></i></div>
+            <div class="pot-total">¥<span id="potNeedTotal">0</span></div>
+          </div>
+
+          <div class="pot-card" data-pot="want">
+            <div class="pot-head">
+              <img src="./assets/icons/pot-want.svg" class="pot-ico" alt="">
+              <div class="pot-meta">
+                <div class="pot-name">休闲弹性</div>
+                <div class="pot-pct">30% · 穿搭/聚餐/爱好/网购/娱乐</div>
+              </div>
+              <div class="pot-left"><div class="pot-left-cap">剩余</div><b id="potWantLeft">¥0</b></div>
+            </div>
+            <div class="pot-progress"><i id="potWantBar" style="width:0%"></i></div>
+            <div class="pot-total">¥<span id="potWantTotal">0</span></div>
+          </div>
+
+          <div class="pot-card" data-pot="save">
+            <div class="pot-head">
+              <img src="./assets/icons/pot-save.svg" class="pot-ico" alt="">
+              <div class="pot-meta">
+                <div class="pot-name">储蓄理财</div>
+                <div class="pot-pct">20% · 原则只存入，减少支出</div>
+              </div>
+              <div class="pot-left"><div class="pot-left-cap">剩余</div><b id="potSaveLeft">¥0</b></div>
+            </div>
+            <div class="pot-progress"><i id="potSaveBar" style="width:0%"></i></div>
+            <div class="pot-total">¥<span id="potSaveTotal">0</span></div>
+          </div>
+
+          <div class="pot-card" data-pot="emerg">
+            <div class="pot-head">
+              <img src="./assets/icons/pot-emerg.svg" class="pot-ico" alt="">
+              <div class="pot-meta">
+                <div class="pot-name">应急备用</div>
+                <div class="pot-pct">10% · 医疗/突发紧急开销</div>
+              </div>
+              <div class="pot-left"><div class="pot-left-cap">剩余</div><b id="potEmergLeft">¥0</b></div>
+            </div>
+            <div class="pot-progress"><i id="potEmergBar" style="width:0%"></i></div>
+            <div class="pot-total">¥<span id="potEmergTotal">0</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-row">
+            <span class="card-title pink">本月账单（<span id="transCount2">0</span> 笔）</span>
+          </div>
+          <ul class="chat-list" id="transList2_4321"></ul>
+        </div>
+      </div>
+
+      <!-- Tab 3: 储蓄目标 -->
+      <div class="tab-pane" data-pane="goal">
+        <div id="goalList4321"></div>
+        <button id="addGoalBtn" class="btn-pink-big">＋ 新建储蓄目标</button>
+        <button id="monthReportBtn" class="btn-soft" style="width:100%;margin-top:8px;">查看本月财务报告</button>
+      </div>
+
+      <!-- Tab 4: 存钱 -->
+      <div class="tab-pane" data-pane="plan">
+        <div class="card plan-intro">
+          <div class="card-title pink">选一个存钱模式</div>
+          <div class="muted" style="margin-top:4px;">自动生成可勾选的存钱计划，无痛积少成多</div>
+        </div>
+
+        <div class="card plan-template">
+          <div class="plan-title">52周递增法</div>
+          <div class="plan-desc">第1周 10 元，每周多 10 元，一年悄悄存下 13,780 元</div>
+          <div class="form-row" style="grid-template-columns:1fr auto;align-items:center;">
+            <div class="plan-input-wrap"><input id="plan52Start" type="number" value="10" /><span class="muted">元起存</span></div>
+            <button id="gen52Btn" class="btn-pink-small">生成计划</button>
+          </div>
+        </div>
+
+        <div class="card plan-template">
+          <div class="plan-title">12存单法</div>
+          <div class="plan-desc">每月固定存一笔，12 个月后连本带息滚动，强制造储蓄</div>
+          <div class="form-row" style="grid-template-columns:1fr auto;align-items:center;">
+            <div class="plan-input-wrap"><input id="plan12Amount" type="number" value="500" /><span class="muted">元/月</span></div>
+            <button id="gen12Btn" class="btn-pink-small">生成计划</button>
+          </div>
+        </div>
+
+        <div class="card plan-template">
+          <div class="plan-title">收入比例法</div>
+          <div class="plan-desc">按月收入比例自动计算，发工资先存钱</div>
+          <div class="form-row" style="grid-template-columns:1fr auto;align-items:center;">
+            <div class="plan-input-wrap"><input id="planPct" type="number" value="20" /><span class="muted">% 收入</span></div>
+            <button id="genPctBtn" class="btn-pink-small">生成计划</button>
+          </div>
+        </div>
+
+        <div id="planList4321"></div>
       </div>
     </section>
+
+    <!-- 设置收入弹窗 -->
+    <div class="modal-overlay" id="setIncomeModal" hidden>
+      <div class="modal">
+        <div class="modal-head">
+          <h3>设置本月收入</h3>
+          <button class="modal-close" data-close="setIncomeModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="muted" style="margin-bottom:8px;">设置后将自动按 40/30/20/10 分配到 4 个存钱罐</div>
+          <input id="setIncomeInput" type="number" placeholder="输入本月收入金额" style="width:100%;padding:10px;border:1px solid #ffc8d8;border-radius:10px;" />
+        </div>
+        <div class="modal-actions">
+          <button class="btn-soft" data-close="setIncomeModal">取消</button>
+          <button id="setIncomeConfirm" class="btn-pink">确定</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 新建储蓄目标弹窗 -->
+    <div class="modal-overlay" id="addGoalModal" hidden>
+      <div class="modal">
+        <div class="modal-head">
+          <h3>新建储蓄目标</h3>
+          <button class="modal-close" data-close="addGoalModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row" style="grid-template-columns:1fr;">
+            <input id="goalNameInput" placeholder="目标名称，例如：日本旅行" />
+            <input id="goalTargetInput" type="number" placeholder="目标金额" />
+            <input id="goalDeadlineInput" type="date" />
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-soft" data-close="addGoalModal">取消</button>
+          <button id="addGoalConfirm" class="btn-pink">创建</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 存入弹窗 -->
+    <div class="modal-overlay" id="depositModal" hidden>
+      <div class="modal">
+        <div class="modal-head">
+          <h3 id="depositTitle">存入</h3>
+          <button class="modal-close" data-close="depositModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="muted" style="margin-bottom:8px;">从「储蓄理财」罐扣除相应金额</div>
+          <input id="depositInput" type="number" placeholder="存入金额" style="width:100%;padding:10px;border:1px solid #ffc8d8;border-radius:10px;" />
+        </div>
+        <div class="modal-actions">
+          <button class="btn-soft" data-close="depositModal">取消</button>
+          <button id="depositConfirm" class="btn-pink">确定</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 流水明细弹窗 -->
+    <div class="modal-overlay" id="historyModal" hidden>
+      <div class="modal">
+        <div class="modal-head">
+          <h3 id="historyTitle">流水明细</h3>
+          <button class="modal-close" data-close="historyModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <ul class="chat-list" id="historyList"></ul>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-pink" data-close="historyModal">关闭</button>
+        </div>
+      </div>
+    </div>
 
     <!-- 锻炼 -->
     <section class="page" id="page-exercise">

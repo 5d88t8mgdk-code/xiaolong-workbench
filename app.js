@@ -295,69 +295,628 @@
     }
   }
 
-  // ====== 记账 ======
-  const LEDGER_KEY = 'workbench_ledger';
-  function getLedger(){
-    const all = store.get(LEDGER_KEY, []);
-    const mk = monthKey();
-    return all.filter(x => x.month === mk);
+  // ====== 4321 记账 ======
+  const POT_CONFIG = {
+    need:   {name:'刚需支出', pct:0.40, icon:'./assets/icons/pot-need.svg',
+             desc:'吃饭/房租/水电/日用品',
+             keywords:['吃饭','外卖','三餐','伙食','饭','餐','房租','水电','水','电','燃气','日用品','用品','早餐','午餐','晚餐','夜宵','交通','公交','地铁','油费']},
+    want:   {name:'休闲弹性', pct:0.30, icon:'./assets/icons/pot-want.svg',
+             desc:'穿搭/聚餐/爱好/网购/娱乐',
+             keywords:['网购','衣服','穿搭','娱乐','聚餐','爱好','打车','车','唱K','KTV','电影','游戏','咖啡','奶茶','小吃']},
+    save:   {name:'储蓄理财', pct:0.20, icon:'./assets/icons/pot-save.svg',
+             desc:'原则只存入，减少支出',
+             keywords:['理财','基金','股票','储蓄','投资']},
+    emerg:  {name:'应急备用', pct:0.10, icon:'./assets/icons/pot-emerg.svg',
+             desc:'医疗/突发紧急开销',
+             keywords:['医院','医疗','急诊','突发','维修','修理']}
+  };
+  const NEED_KEYS = POT_CONFIG.need.keywords;
+  const WANT_KEYS = POT_CONFIG.want.keywords;
+
+  function incomeKey(mk){ return 'workbench_4321_income_'+(mk||monthKey()); }
+  function potsKey(mk){ return 'workbench_4321_pots_'+(mk||monthKey()); }
+  function transKey(mk){ return 'workbench_4321_trans_'+(mk||monthKey()); }
+  const GOALS_KEY = 'workbench_4321_goals';
+  const PLANS_KEY = 'workbench_4321_plans';
+
+  function getIncome(mk){ return store.get(incomeKey(mk), 0) || 0; }
+  function setIncome(mk, v){
+    store.set(incomeKey(mk), v);
+    // 重置 pots 分配
+    const pots = {};
+    for(const k in POT_CONFIG){ pots[k] = +(v * POT_CONFIG[k].pct).toFixed(2); }
+    store.set(potsKey(mk), pots);
   }
-  function refreshLedger(){
-    const list = getLedger();
-    const inc = list.filter(x=>x.type==='income').reduce((s,x)=>s+ +x.amount, 0);
-    const exp = list.filter(x=>x.type==='expense').reduce((s,x)=>s+ +x.amount, 0);
-    $('#sumIncome').textContent = fmt(inc);
-    $('#sumExpense').textContent = fmt(exp);
-    $('#sumBalance').textContent = '¥'+fmt(inc-exp);
-    $('#sumBalance').style.color = (inc-exp)>=0 ? 'var(--good)' : 'var(--bad)';
-    $('#ledgerMonth').textContent = monthKey();
-    const ul = $('#ledgerList'); ul.innerHTML='';
-    list.slice().reverse().forEach(x=>{
+
+  function getPots(mk){
+    const pots = store.get(potsKey(mk), null);
+    if(!pots){
+      // 如果没有，按当前收入初始化
+      const inc = getIncome(mk);
+      const fresh = {};
+      for(const k in POT_CONFIG){ fresh[k] = +(inc * POT_CONFIG[k].pct).toFixed(2); }
+      store.set(potsKey(mk), fresh);
+      return fresh;
+    }
+    return pots;
+  }
+  function setPots(mk, pots){ store.set(potsKey(mk), pots); }
+
+  function getTrans(mk){ return store.get(transKey(mk), []); }
+  function setTrans(mk, list){ store.set(transKey(mk), list); }
+
+  // 自动分类：根据 note 里的关键词匹配 pot 和 category
+  function autoCategorize(note){
+    const n = note || '';
+    // 优先级1：明确的休闲信号词（避免被 need 的「饭」「餐」误伤）
+    const wantFirst = ['奶茶','咖啡','唱K','KTV','电影','聚餐','网购','穿搭','打车','小吃'];
+    for(const kw of wantFirst){
+      if(n.indexOf(kw) >= 0) return {pot:'want', category:'休闲'};
+    }
+    // 优先级2：need 关键词
+    for(const kw of NEED_KEYS){
+      if(n.indexOf(kw) >= 0) return {pot:'need', category:'刚需'};
+    }
+    // 优先级3：want 其他关键词
+    for(const kw of WANT_KEYS){
+      if(n.indexOf(kw) >= 0) return {pot:'want', category:'休闲'};
+    }
+    // 没匹配上的关键词，默认到 want（休闲弹性更通用）
+    return {pot:'want', category:'其他'};
+  }
+
+  // 解析对话输入
+  function parseChatInput(text){
+    text = (text||'').trim();
+    if(!text) return null;
+
+    // 收入：收入 N 或 收入+N 或 收入-N
+    let m = text.match(/^收入\s*([+\-]?)(\d+(?:\.\d+)?)$/);
+    if(m){
+      const sign = m[1] === '-' ? -1 : 1;
+      const v = sign * parseFloat(m[2]);
+      return {type:'income', amount:v, raw:text};
+    }
+    // 强制 pot 前缀：^(刚需|休闲|储蓄|备用)\s+(.+?)\s+(\d+)$
+    m = text.match(/^(刚需|休闲|储蓄|备用)\s+(.+?)\s+(\d+(?:\.\d+)?)$/);
+    if(m){
+      const potMap = {刚需:'need', 休闲:'want', 储蓄:'save', 备用:'emerg'};
+      const pot = potMap[m[1]];
+      const note = m[2];
+      const amount = parseFloat(m[3]);
+      return {type:'expense', amount, note, pot, category:POT_CONFIG[pot].name};
+    }
+    // 普通：note + 数字
+    m = text.match(/^(.+?)\s+(\d+(?:\.\d+)?)$/);
+    if(m){
+      const note = m[1];
+      const amount = parseFloat(m[2]);
+      const {pot, category} = autoCategorize(note);
+      return {type:'expense', amount, note, pot, category};
+    }
+    return null;
+  }
+
+  // 添加一笔交易
+  function addTrans(item){
+    const mk = monthKey();
+    const list = getTrans(mk);
+    const d = new Date();
+    const entry = Object.assign({
+      id:'t_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+      ts:Date.now(),
+      date:todayKey(),
+      time:pad(d.getHours())+':'+pad(d.getMinutes())
+    }, item);
+    list.push(entry);
+    setTrans(mk, list);
+    // 扣 pot
+    if(item.type === 'expense' && item.pot){
+      const pots = getPots(mk);
+      pots[item.pot] = +(pots[item.pot] - item.amount).toFixed(2);
+      setPots(mk, pots);
+    }
+    return entry;
+  }
+  // 删除一笔交易
+  function delTrans(id){
+    const mk = monthKey();
+    const list = getTrans(mk);
+    const item = list.find(x=>x.id===id);
+    if(!item) return;
+    // 退还 pot
+    if(item.type === 'expense' && item.pot){
+      const pots = getPots(mk);
+      pots[item.pot] = +(pots[item.pot] + item.amount).toFixed(2);
+      setPots(mk, pots);
+    }
+    setTrans(mk, list.filter(x=>x.id!==id));
+  }
+
+  // 老数据迁移：把 workbench_ledger 里的当月记录迁过来
+  function migrateLegacyLedger(){
+    const mk = monthKey();
+    const newTrans = getTrans(mk);
+    if(newTrans.length > 0) return; // 已经有新数据了
+    const old = store.get('workbench_ledger', []);
+    if(!old || old.length === 0) return;
+    let incMigrated = false;
+    for(const x of old){
+      if(x.month !== mk) continue;
+      if(x.type === 'income' && !incMigrated){
+        // 只迁移第一个 income 作为本月收入
+        setIncome(mk, x.amount);
+        incMigrated = true;
+        continue;
+      }
+      if(x.type === 'expense'){
+        const {pot, category} = autoCategorize(x.note || x.category || '');
+        addTrans({
+          type:'expense',
+          amount:x.amount,
+          note:x.note || x.category || '其他',
+          pot,
+          category,
+          time:x.time || ''
+        });
+      }
+    }
+  }
+
+  // ====== 渲染函数 ======
+  function refreshIncome(){
+    const inc = getIncome();
+    $('#monthIncome').textContent = fmt(inc);
+  }
+
+  function refreshPots(){
+    const inc = getIncome();
+    const pots = getPots();
+    ['need','want','save','emerg'].forEach(k => {
+      const total = +(inc * POT_CONFIG[k].pct).toFixed(2);
+      const left = pots[k] || 0;
+      const used = total - left;
+      const pct = total > 0 ? Math.max(0, Math.min(100, used/total*100)) : 0;
+      const leftEl = $('#pot'+k.charAt(0).toUpperCase()+k.slice(1)+'Left');
+      if(leftEl) leftEl.textContent = '¥'+fmt(Math.max(0, left));
+      const totalEl = $('#pot'+k.charAt(0).toUpperCase()+k.slice(1)+'Total');
+      if(totalEl) totalEl.textContent = fmt(total);
+      const bar = $('#pot'+k.charAt(0).toUpperCase()+k.slice(1)+'Bar');
+      if(bar){
+        bar.style.width = pct+'%';
+        bar.classList.toggle('over', left < 0);
+      }
+    });
+  }
+
+  function renderTransList(target){
+    const list = getTrans().slice().reverse();
+    const ul = $('#'+target);
+    if(!ul) return;
+    ul.innerHTML = '';
+    list.forEach(x => {
       const li = document.createElement('li');
+      const potCfg = POT_CONFIG[x.pot];
+      const tag = x.type==='income' ? '收入' : (potCfg ? potCfg.name : '支出');
       li.innerHTML = `<div class="l-info">
-          <span><span class="badge todo" style="font-size:10px;">${x.category}</span> ${x.note||''}</span>
-          <span class="muted" style="font-size:11px;">${x.date.slice(5)} ${x.time||''}</span>
+          <span><span class="l-tag">${tag}</span>${x.note||''}</span>
+          <span class="muted" style="font-size:11px;">${(x.date||'').slice(5)} ${x.time||''}</span>
         </div>
         <div style="display:flex;align-items:center;gap:6px;">
-          <span class="l-amount ${x.type==='expense'?'exp':'inc'}">${x.type==='expense'?'-':'+'}¥${fmt(x.amount)}</span>
+          <span class="l-amount ${x.type==='income'?'inc':'exp'}">${x.type==='income'?'+':'-'}¥${fmt(x.amount)}</span>
           <button class="l-del" data-id="${x.id}">✕</button>
         </div>`;
       ul.appendChild(li);
     });
-    $$('.l-del').forEach(b => b.addEventListener('click', e=>{
-      const id = e.target.dataset.id;
-      const all = store.get(LEDGER_KEY, []).filter(x=>x.id!==id);
-      store.set(LEDGER_KEY, all);
-      refreshLedger();
+    ul.querySelectorAll('.l-del').forEach(b => b.addEventListener('click', e=>{
+      delTrans(e.target.dataset.id);
+      refreshAll();
+    }));
+    // 更新计数
+    const cnt1 = $('#transCount'), cnt2 = $('#transCount2');
+    if(cnt1) cnt1.textContent = list.length;
+    if(cnt2) cnt2.textContent = list.length;
+  }
+
+  function refreshAll(){
+    refreshIncome();
+    refreshPots();
+    renderTransList('transList4321');
+    renderTransList('transList2_4321');
+    refreshGoals();
+    refreshPlans();
+  }
+
+  // ====== Tab 切换 ======
+  function bindLedgerTabs(){
+    $$('#ledgerTabs .tab-item').forEach(b => b.addEventListener('click', ()=>{
+      $$('#ledgerTabs .tab-item').forEach(x=>x.classList.remove('active'));
+      $$('.tab-pane').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      const t = b.dataset.tab;
+      const pane = $(`.tab-pane[data-pane="${t}"]`);
+      if(pane) pane.classList.add('active');
     }));
   }
-  function bindLedger(){
-    $('#leAdd').addEventListener('click', ()=>{
-      const amt = +$('#leAmount').value;
-      const note = $('#leNote').value.trim();
-      const type = $('#leType').value;
-      const category = $('#leCategory').value;
-      if(!amt){ toast('请填写金额'); return; }
-      const all = store.get(LEDGER_KEY, []);
+
+  // ====== 对话记账 ======
+  function bindChat(){
+    const submit = $('#chatSubmit');
+    const input = $('#chatInput');
+    submit.addEventListener('click', handleChat);
+    input.addEventListener('keydown', e=>{ if(e.key === 'Enter') handleChat(); });
+
+    function handleChat(){
+      const text = input.value;
+      if(!text.trim()) return;
+      const parsed = parseChatInput(text);
+      if(!parsed){
+        toast('没看懂，换个说法试试，如「奶茶15」「收入8000」');
+        return;
+      }
+      if(parsed.type === 'income'){
+        const cur = getIncome();
+        const next = +(cur + parsed.amount).toFixed(2);
+        if(next < 0){
+          toast('收入不能为负');
+          return;
+        }
+        setIncome(monthKey(), next);
+        toast(parsed.amount > 0 ? `收入已 +¥${fmt(parsed.amount)}` : `收入已 -¥${fmt(-parsed.amount)}`);
+      } else {
+        // expense
+        if(parsed.amount <= 0){
+          toast('金额要大于 0');
+          return;
+        }
+        addTrans({
+          type:'expense',
+          amount:parsed.amount,
+          note:parsed.note,
+          pot:parsed.pot,
+          category:parsed.category
+        });
+        const potName = POT_CONFIG[parsed.pot].name;
+        toast(`已记账：${parsed.note} -¥${fmt(parsed.amount)} · ${potName}`);
+      }
+      input.value = '';
+      refreshAll();
+    }
+
+    $('#resetMonthBtn').addEventListener('click', ()=>{
+      if(!confirm('清空本月所有账单？存钱罐金额也会重置。')) return;
+      const mk = monthKey();
+      localStorage.removeItem(transKey(mk));
+      localStorage.removeItem(potsKey(mk));
+      refreshAll();
+      toast('已清空');
+    });
+  }
+
+  // ====== 设置收入弹窗 ======
+  let modalCallback = null;
+  function openModal(id){
+    const el = $('#'+id);
+    if(el) el.hidden = false;
+  }
+  function closeModal(id){
+    const el = $('#'+id);
+    if(el) el.hidden = true;
+  }
+  function bindSetIncome(){
+    $('#setIncomeBtn').addEventListener('click', ()=>{
+      $('#setIncomeInput').value = getIncome();
+      openModal('setIncomeModal');
+    });
+    $$('[data-close]').forEach(b => b.addEventListener('click', e=>{
+      closeModal(e.target.dataset.close);
+    }));
+    $('#setIncomeConfirm').addEventListener('click', ()=>{
+      const v = +$('#setIncomeInput').value;
+      if(!v || v <= 0){ toast('请输入有效金额'); return; }
+      setIncome(monthKey(), v);
+      closeModal('setIncomeModal');
+      refreshAll();
+      toast('已设置本月收入');
+    });
+  }
+
+  // ====== 储蓄目标 ======
+  function getGoals(){ return store.get(GOALS_KEY, []); }
+  function setGoals(g){ store.set(GOALS_KEY, g); }
+
+  function suggestedMonthly(target, saved, deadline){
+    const t = new Date(deadline);
+    const now = new Date();
+    const months = Math.max(1, (t.getFullYear()-now.getFullYear())*12 + (t.getMonth()-now.getMonth()));
+    return Math.ceil((target - saved) / months);
+  }
+
+  function refreshGoals(){
+    const goals = getGoals();
+    const ul = $('#goalList4321');
+    if(!ul) return;
+    ul.innerHTML = '';
+    if(goals.length === 0){
+      ul.innerHTML = '<div class="card" style="text-align:center;color:var(--ink-soft);font-size:13px;">还没有储蓄目标，点击下方按钮创建你的第一个目标吧 ✨</div>';
+      return;
+    }
+    goals.forEach(g => {
+      const saved = g.saved || 0;
+      const pct = Math.min(100, saved/g.target*100);
+      const monthly = suggestedMonthly(g.target, saved, g.deadline);
+      const deadlineStr = g.deadline.slice(0,7);
+      const card = document.createElement('div');
+      card.className = 'goal-card';
+      card.innerHTML = `<div class="goal-head">
+          <div class="goal-ico"><img src="./assets/icons/target.svg" style="width:24px;height:24px;"></div>
+          <div class="goal-info">
+            <div class="goal-name">${g.name}</div>
+            <div class="goal-meta">目标 ¥${fmt(g.target)} · ${deadlineStr} 前 · 建议每月存 <b>¥${monthly}</b></div>
+          </div>
+          <button class="goal-del" data-id="${g.id}">✕</button>
+        </div>
+        <div class="goal-progress"><i style="width:${pct}%"></i></div>
+        <div class="goal-stat"><span>已存 <b>¥${fmt(saved)}</b> / ¥${fmt(g.target)}</span><span>${pct.toFixed(1)}%</span></div>
+        <div class="goal-actions">
+          <button class="deposit-btn" data-id="${g.id}">＋ 存入</button>
+          <button class="history-btn" data-id="${g.id}">流水明细</button>
+        </div>`;
+      ul.appendChild(card);
+    });
+    // 绑定按钮
+    ul.querySelectorAll('.goal-del').forEach(b => b.addEventListener('click', e=>{
+      if(!confirm('删除这个储蓄目标？')) return;
+      setGoals(getGoals().filter(g=>g.id!==e.target.dataset.id));
+      refreshGoals();
+    }));
+    ul.querySelectorAll('.deposit-btn').forEach(b => b.addEventListener('click', e=>{
+      const id = e.target.dataset.id;
+      const goal = getGoals().find(g=>g.id===id);
+      if(!goal) return;
+      $('#depositTitle').textContent = '存入 · '+goal.name;
+      $('#depositInput').value = '';
+      openModal('depositModal');
+      modalCallback = (amt)=>{
+        if(amt <= 0) return;
+        // 从储蓄理财罐扣
+        const mk = monthKey();
+        const pots = getPots(mk);
+        if(pots.save < amt){
+          toast('储蓄理财罐余额不足');
+          return;
+        }
+        pots.save = +(pots.save - amt).toFixed(2);
+        setPots(mk, pots);
+        goal.saved = (goal.saved || 0) + amt;
+        goal.history = goal.history || [];
+        const d = new Date();
+        goal.history.push({amount:amt, ts:Date.now(), date:todayKey(), time:pad(d.getHours())+':'+pad(d.getMinutes())});
+        setGoals(getGoals().map(g=>g.id===id?goal:g));
+        refreshAll();
+        toast('已存入 ¥'+fmt(amt));
+      };
+    }));
+    ul.querySelectorAll('.history-btn').forEach(b => b.addEventListener('click', e=>{
+      const id = e.target.dataset.id;
+      const goal = getGoals().find(g=>g.id===id);
+      if(!goal) return;
+      showHistory(goal);
+    }));
+  }
+
+  function bindGoals(){
+    $('#addGoalBtn').addEventListener('click', ()=>{
+      $('#goalNameInput').value = '';
+      $('#goalTargetInput').value = '';
       const d = new Date();
-      all.push({
-        id: 'l_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
-        type, category, amount:amt, note,
-        date: todayKey(), time: pad(d.getHours())+':'+pad(d.getMinutes()),
-        month: monthKey()
+      d.setFullYear(d.getFullYear()+1);
+      $('#goalDeadlineInput').value = d.toISOString().slice(0,10);
+      openModal('addGoalModal');
+    });
+    $('#addGoalConfirm').addEventListener('click', ()=>{
+      const name = $('#goalNameInput').value.trim();
+      const target = +$('#goalTargetInput').value;
+      const deadline = $('#goalDeadlineInput').value;
+      if(!name || !target || !deadline){ toast('请填完整'); return; }
+      const goals = getGoals();
+      goals.push({
+        id:'g_'+Date.now(),
+        name, target, deadline,
+        saved:0,
+        history:[]
       });
-      store.set(LEDGER_KEY, all);
-      $('#leAmount').value=''; $('#leNote').value='';
-      refreshLedger();
-      toast('已记录');
+      setGoals(goals);
+      closeModal('addGoalModal');
+      refreshGoals();
+      toast('目标已创建');
     });
-    $('#leReset').addEventListener('click', ()=>{
-      if(!confirm('清空本月所有记录？')) return;
-      const all = store.get(LEDGER_KEY, []).filter(x => x.month !== monthKey());
-      store.set(LEDGER_KEY, all);
-      refreshLedger();
+    $('#monthReportBtn').addEventListener('click', showMonthReport);
+    $('#depositConfirm').addEventListener('click', ()=>{
+      const amt = +$('#depositInput').value;
+      if(!amt || amt <= 0){ toast('金额无效'); return; }
+      if(modalCallback){ modalCallback(amt); modalCallback = null; }
+      closeModal('depositModal');
     });
-    refreshLedger();
+  }
+
+  function showHistory(goal){
+    $('#historyTitle').textContent = goal.name+' · 流水';
+    const ul = $('#historyList');
+    ul.innerHTML = '';
+    if(!goal.history || goal.history.length === 0){
+      ul.innerHTML = '<li style="justify-content:center;color:var(--ink-soft);">还没有流水</li>';
+    } else {
+      goal.history.slice().reverse().forEach(h => {
+        const li = document.createElement('li');
+        li.innerHTML = `<div class="l-info">
+            <span>存入 ¥${fmt(h.amount)}</span>
+            <span class="muted" style="font-size:11px;">${(h.date||'').slice(5)} ${h.time||''}</span>
+          </div>`;
+        ul.appendChild(li);
+      });
+    }
+    openModal('historyModal');
+  }
+
+  function showMonthReport(){
+    const inc = getIncome();
+    const pots = getPots();
+    const trans = getTrans();
+    const inc_total = trans.filter(x=>x.type==='income').reduce((s,x)=>s+x.amount, 0);
+    const exp_total = trans.filter(x=>x.type==='expense').reduce((s,x)=>s+x.amount, 0);
+    const lines = [
+      `📊 本月财务报告`,
+      `─────────────────`,
+      `本月收入：¥${fmt(inc)}（已记录 +¥${fmt(inc_total)}）`,
+      ``,
+      `【4 个存钱罐】`,
+      `刚需支出：剩 ¥${fmt(pots.need)} / ¥${fmt(inc*POT_CONFIG.need.pct)}`,
+      `休闲弹性：剩 ¥${fmt(pots.want)} / ¥${fmt(inc*POT_CONFIG.want.pct)}`,
+      `储蓄理财：剩 ¥${fmt(pots.save)} / ¥${fmt(inc*POT_CONFIG.save.pct)}`,
+      `应急备用：剩 ¥${fmt(pots.emerg)} / ¥${fmt(inc*POT_CONFIG.emerg.pct)}`,
+      ``,
+      `【账单统计】`,
+      `总支出：¥${fmt(exp_total)}`,
+      `账单数：${trans.length} 笔`
+    ];
+    $('#historyTitle').textContent = '本月财务报告';
+    const ul = $('#historyList');
+    ul.innerHTML = '';
+    lines.forEach(line => {
+      const li = document.createElement('li');
+      li.style.whiteSpace = 'pre';
+      li.style.display = 'block';
+      li.textContent = line;
+      ul.appendChild(li);
+    });
+    openModal('historyModal');
+  }
+
+  // ====== 存钱计划 ======
+  function getPlans(){ return store.get(PLANS_KEY, []); }
+  function setPlans(p){ store.set(PLANS_KEY, p); }
+
+  function generate52Week(start){
+    const items = [];
+    for(let i=1;i<=52;i++){
+      items.push({idx:i, label:'第'+i+'周', amount:start*i, done:false});
+    }
+    return {id:'p_'+Date.now()+'_'+Math.random().toString(36).slice(2,5),
+      type:'52w', name:'52周递增法 · 起存 ¥'+start,
+      config:{start},
+      totalAmount: items.reduce((s,x)=>s+x.amount, 0),
+      items};
+  }
+  function generate12Month(monthly){
+    const items = [];
+    for(let i=1;i<=12;i++){
+      items.push({idx:i, label:'第'+i+'月', amount:monthly, done:false});
+    }
+    return {id:'p_'+Date.now()+'_'+Math.random().toString(36).slice(2,5),
+      type:'12m', name:'12存单法 · 每月 ¥'+monthly,
+      config:{monthly},
+      totalAmount: items.reduce((s,x)=>s+x.amount, 0),
+      items};
+  }
+  function generatePct(percent, income){
+    const monthly = +(income * percent / 100).toFixed(2);
+    const items = [];
+    for(let i=1;i<=12;i++){
+      items.push({idx:i, label:'第'+i+'月', amount:monthly, done:false});
+    }
+    return {id:'p_'+Date.now()+'_'+Math.random().toString(36).slice(2,5),
+      type:'pct', name:'收入比例法 · '+percent+'% · 月 ¥'+fmt(monthly),
+      config:{percent, income},
+      totalAmount: items.reduce((s,x)=>s+x.amount, 0),
+      items};
+  }
+
+  function refreshPlans(){
+    const plans = getPlans();
+    const wrap = $('#planList4321');
+    if(!wrap) return;
+    wrap.innerHTML = '';
+    if(plans.length === 0) return;
+    plans.forEach(p => {
+      const doneCount = p.items.filter(x=>x.done).length;
+      const doneAmt = p.items.filter(x=>x.done).reduce((s,x)=>s+x.amount, 0);
+      const pct = p.items.length>0 ? doneCount/p.items.length*100 : 0;
+      const card = document.createElement('div');
+      card.className = 'plan-card';
+      card.innerHTML = `<div class="plan-card-head">
+          <div class="plan-card-name">${p.name}</div>
+          <button class="goal-del" data-id="${p.id}" title="删除">✕</button>
+        </div>
+        <div class="plan-progress"><i style="width:${pct}%"></i></div>
+        <div class="plan-card-stat">已完成 <b>${doneCount}/${p.items.length}</b> 笔 · 累计 <b>¥${fmt(doneAmt)}</b> / ¥${fmt(p.totalAmount)}</div>
+        <div class="plan-items">${p.items.map(it => `
+          <div class="plan-item ${it.done?'done':''}">
+            <label style="display:flex;align-items:center;gap:4px;justify-content:center;">
+              <input type="checkbox" data-pid="${p.id}" data-idx="${it.idx}" ${it.done?'checked':''}>
+              <span>${it.label}</span>
+            </label>
+            <span>¥${fmt(it.amount)}</span>
+          </div>`).join('')}</div>`;
+      wrap.appendChild(card);
+    });
+    wrap.querySelectorAll('.goal-del').forEach(b => b.addEventListener('click', e=>{
+      if(!confirm('删除这个存钱计划？')) return;
+      setPlans(getPlans().filter(p=>p.id!==e.target.dataset.id));
+      refreshPlans();
+    }));
+    wrap.querySelectorAll('.plan-item input[type=checkbox]').forEach(cb => cb.addEventListener('change', e=>{
+      const pid = e.target.dataset.pid;
+      const idx = +e.target.dataset.idx;
+      const plan = getPlans().find(p=>p.id===pid);
+      if(!plan) return;
+      const item = plan.items.find(x=>x.idx===idx);
+      if(!item) return;
+      item.done = e.target.checked;
+      if(item.done){ item.ts = Date.now(); }
+      setPlans(getPlans().map(p=>p.id===pid?plan:p));
+      refreshPlans();
+    }));
+  }
+
+  function bindPlans(){
+    $('#gen52Btn').addEventListener('click', ()=>{
+      const start = +$('#plan52Start').value || 10;
+      const plans = getPlans();
+      plans.push(generate52Week(start));
+      setPlans(plans);
+      refreshPlans();
+      toast('已生成 52 周计划');
+    });
+    $('#gen12Btn').addEventListener('click', ()=>{
+      const monthly = +$('#plan12Amount').value || 500;
+      const plans = getPlans();
+      plans.push(generate12Month(monthly));
+      setPlans(plans);
+      refreshPlans();
+      toast('已生成 12 存单计划');
+    });
+    $('#genPctBtn').addEventListener('click', ()=>{
+      const percent = +$('#planPct').value || 20;
+      const income = getIncome();
+      if(income <= 0){ toast('请先设置本月收入'); return; }
+      const plans = getPlans();
+      plans.push(generatePct(percent, income));
+      setPlans(plans);
+      refreshPlans();
+      toast('已生成收入比例计划');
+    });
+  }
+
+  // 总入口
+  function bindLedger(){
+    migrateLegacyLedger();
+    bindLedgerTabs();
+    bindChat();
+    bindSetIncome();
+    bindGoals();
+    bindPlans();
+    refreshAll();
   }
 
   // ====== 锻炼 ======

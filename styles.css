@@ -580,3 +580,208 @@ textarea#memoInput{
 @media (max-width:760px){
   .install-tip{top:50px;left:10px;right:10px;}
 }
+
+/* ===== 4321 记账页 ===== */
+.income-card{background:linear-gradient(180deg,var(--bg-soft-2),var(--bg-soft));}
+.income-row{display:flex;justify-content:space-between;align-items:center;}
+.income-row .big-amount{font-size:30px;font-weight:800;color:var(--pink-700);}
+.btn-pink-small{
+  background:linear-gradient(180deg,var(--pink-400),var(--pink-500));
+  color:#fff;border:none;cursor:pointer;
+  border-radius:99px;padding:8px 14px;font-size:13px;font-weight:700;
+  box-shadow:0 4px 10px rgba(255,90,141,.3);
+}
+.btn-pink-big{
+  width:100%;margin-top:12px;padding:14px;
+  background:linear-gradient(180deg,var(--pink-400),var(--pink-500));
+  color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:800;
+  cursor:pointer;box-shadow:0 4px 12px rgba(255,90,141,.35);
+}
+
+/* Tab 切换栏 */
+.tab-bar{
+  display:flex;gap:6px;background:var(--bg-soft);
+  border-radius:14px;padding:4px;margin-bottom:12px;
+  border:1px solid var(--line);
+}
+.tab-item{
+  flex:1;padding:8px;border:none;background:transparent;cursor:pointer;
+  font-size:13px;font-weight:700;color:var(--ink-soft);border-radius:10px;
+}
+.tab-item.active{background:#fff;color:var(--pink-700);box-shadow:0 2px 6px rgba(255,90,141,.18);}
+.tab-pane{display:none;animation:fade .3s ease;}
+.tab-pane.active{display:block;}
+
+/* 对话记账 */
+.chat-card{
+  display:flex;gap:10px;align-items:flex-start;
+  background:transparent;padding:0;margin-bottom:10px;
+}
+.chat-avatar{width:48px;height:48px;border-radius:50%;background:var(--bg-soft-2);padding:6px;}
+.chat-bubble{
+  flex:1;background:#fff;border:1px solid var(--line);
+  border-radius:14px;padding:10px 14px;font-size:13px;color:var(--ink);line-height:1.7;
+  position:relative;
+}
+.chat-bubble::before{
+  content:"";position:absolute;left:-6px;top:12px;
+  border:8px solid transparent;border-right-color:#fff;
+}
+.chat-bubble::after{
+  content:"";position:absolute;left:-8px;top:11px;
+  border:9px solid transparent;border-right-color:var(--line);
+}
+.chat-input-card{padding:14px;}
+.chat-tip{font-size:11px;color:var(--ink-soft);margin-top:6px;}
+
+.chat-list{list-style:none;padding:0;margin:8px 0;}
+.chat-list li{
+  display:flex;justify-content:space-between;align-items:center;gap:8px;
+  background:var(--bg-soft);border:1px dashed var(--line-d2);border-radius:12px;
+  padding:8px 10px;margin-bottom:6px;font-size:13px;
+}
+.chat-list .l-info{display:flex;flex-direction:column;gap:2px;}
+.chat-list .l-amount{font-weight:800;color:var(--pink-500);}
+.chat-list .l-amount.inc{color:#5cba8f;}
+.chat-list .l-amount.exp{color:var(--pink-500);}
+.chat-list .l-tag{font-size:10px;background:var(--line-2);color:var(--pink-700);padding:1px 6px;border-radius:99px;display:inline-block;margin-right:4px;}
+.chat-list .l-del{background:none;color:var(--ink-soft);font-size:16px;cursor:pointer;padding:0 4px;}
+
+/* 存钱罐 */
+.pot-intro{margin-bottom:10px;padding:0 4px;}
+.pot-intro .card-title{font-size:15px;}
+.pot-list{display:flex;flex-direction:column;gap:10px;margin-bottom:12px;}
+.pot-card{
+  background:#fff;border-radius:16px;padding:14px;
+  border:1px solid var(--line);box-shadow:var(--shadow);
+}
+.pot-head{display:flex;align-items:center;gap:10px;}
+.pot-ico{width:40px;height:40px;flex-shrink:0;}
+.pot-meta{flex:1;}
+.pot-name{font-weight:800;font-size:14px;color:var(--ink);}
+.pot-pct{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+.pot-left{
+  text-align:right;color:var(--pink-700);line-height:1.2;flex-shrink:0;
+}
+.pot-left-cap{font-size:10px;color:var(--ink-soft);font-weight:600;}
+.pot-left b{font-size:20px;font-weight:800;display:block;color:var(--pink-600);margin-top:2px;}
+.pot-progress{
+  height:14px;background:var(--bg-soft);border-radius:99px;
+  margin:10px 0 4px;overflow:hidden;position:relative;
+}
+.pot-progress i{
+  display:block;height:100%;
+  background:linear-gradient(90deg,#ffc1d4,var(--pink-500));
+  border-radius:99px;transition:width .35s ease;
+}
+.pot-progress i.over{
+  background:linear-gradient(90deg,#ffadc6,#cc3168);
+}
+.pot-total{font-size:11px;color:var(--ink-soft);text-align:right;}
+
+/* 储蓄目标 */
+.goal-card{
+  background:#fff;border-radius:16px;padding:14px;
+  border:1px solid var(--line);box-shadow:var(--shadow);margin-bottom:10px;
+}
+.goal-head{display:flex;align-items:center;gap:10px;}
+.goal-ico{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--bg-soft-2);display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-size:20px;
+}
+.goal-info{flex:1;}
+.goal-name{font-weight:800;font-size:14px;color:var(--ink);}
+.goal-meta{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+.goal-meta b{color:var(--pink-700);}
+.goal-del{background:none;color:var(--ink-soft);font-size:16px;cursor:pointer;}
+.goal-progress{
+  height:8px;background:var(--bg-soft);border-radius:99px;
+  margin:10px 0 6px;overflow:hidden;
+}
+.goal-progress i{
+  display:block;height:100%;
+  background:linear-gradient(90deg,#ffc1d4,var(--pink-500));
+  border-radius:99px;transition:width .35s ease;
+}
+.goal-stat{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);}
+.goal-stat b{color:var(--pink-700);font-size:14px;}
+.goal-actions{display:flex;gap:8px;margin-top:10px;}
+.goal-actions button{
+  flex:1;padding:8px;border:none;border-radius:99px;font-weight:700;cursor:pointer;font-size:13px;
+}
+.goal-actions .deposit-btn{background:linear-gradient(180deg,var(--pink-400),var(--pink-500));color:#fff;}
+.goal-actions .history-btn{background:var(--line-2);color:var(--pink-700);}
+
+/* 存钱计划 */
+.plan-intro{padding:14px;}
+.plan-template{padding:14px;}
+.plan-title{color:var(--pink-700);font-weight:800;font-size:14px;margin-bottom:4px;}
+.plan-desc{font-size:12px;color:var(--ink-soft);line-height:1.6;margin-bottom:10px;}
+.plan-input-wrap{display:flex;align-items:center;gap:4px;}
+.plan-input-wrap input{
+  width:80px;padding:6px 8px;border:1px solid var(--line-d3);
+  border-radius:8px;font-size:13px;outline:none;
+}
+.plan-card{
+  background:#fff;border-radius:16px;padding:14px;
+  border:1px solid var(--line);box-shadow:var(--shadow);margin-top:10px;
+}
+.plan-card-head{display:flex;justify-content:space-between;align-items:center;}
+.plan-card-name{font-weight:800;color:var(--pink-700);}
+.plan-card-stat{font-size:12px;color:var(--ink-soft);}
+.plan-card-stat b{color:var(--pink-700);}
+.plan-progress{
+  height:6px;background:var(--bg-soft);border-radius:99px;
+  margin:8px 0;overflow:hidden;
+}
+.plan-progress i{
+  display:block;height:100%;
+  background:linear-gradient(90deg,#ffc1d4,var(--pink-500));
+  border-radius:99px;
+}
+.plan-items{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
+  margin-top:10px;max-height:200px;overflow-y:auto;
+}
+.plan-item{
+  background:var(--bg-soft);border:1px solid var(--line);
+  border-radius:8px;padding:4px 6px;font-size:11px;text-align:center;
+  display:flex;flex-direction:column;gap:2px;
+}
+.plan-item.done{background:var(--pink-100);color:var(--pink-700);font-weight:700;}
+.plan-item input{accent-color:var(--pink-500);margin:0;}
+.plan-item label{cursor:pointer;}
+
+/* 弹窗 */
+.modal-overlay{
+  position:fixed;inset:0;z-index:200;background:rgba(40,20,30,.55);
+  backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;
+  padding:16px;animation:fade .25s ease;
+}
+.modal-overlay[hidden]{display:none;}
+.modal{
+  width:100%;max-width:420px;background:#fff;border-radius:18px;
+  box-shadow:0 10px 40px rgba(0,0,0,.25);overflow:hidden;
+}
+.modal-head{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 18px;background:linear-gradient(180deg,var(--bg-soft-2),var(--bg-soft));
+  border-bottom:1px solid var(--line);
+}
+.modal-head h3{margin:0;font-size:15px;color:var(--pink-700);font-weight:800;}
+.modal-close{
+  background:#fff;border:none;width:28px;height:28px;border-radius:50%;
+  font-size:16px;cursor:pointer;color:var(--pink-700);font-weight:700;
+}
+.modal-body{padding:14px 18px;}
+.modal-actions{
+  display:flex;gap:8px;padding:12px 18px;
+  border-top:1px solid var(--line);background:var(--bg-soft);
+}
+.modal-actions button{
+  flex:1;border:none;cursor:pointer;border-radius:99px;
+  padding:10px;font-weight:700;font-size:13px;
+}
+.modal-actions .btn-pink{background:linear-gradient(180deg,var(--pink-400),var(--pink-500));color:#fff;}
+.modal-actions .btn-soft{background:var(--line-2);color:var(--pink-700);}
