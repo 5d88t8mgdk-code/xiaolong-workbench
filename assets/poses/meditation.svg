@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" fill="#fdf6f0"/>
+  <!-- 盘腿坐 -->
+  <ellipse cx="100" cy="155" rx="40" ry="8" fill="none" stroke="#5b9bff" stroke-width="2.5"/>
+  <!-- 身体竖直 -->
+  <line x1="100" y1="60" x2="100" y2="150" stroke="#5b9bff" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- 双手放膝 -->
+  <line x1="100" y1="90" x2="75" y2="135" stroke="#5b9bff" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="100" y1="90" x2="125" y2="135" stroke="#5b9bff" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="100" cy="45" r="10" fill="#ffd5b8" stroke="#5b9bff" stroke-width="2.5"/>
+  <!-- 呼吸波 -->
+  <path d="M 30 100 Q 50 95, 30 100 Q 50 105, 30 100" fill="none" stroke="#ff5a8d" stroke-width="2"/>
+  <path d="M 170 100 Q 150 95, 170 100 Q 150 105, 170 100" fill="none" stroke="#ff5a8d" stroke-width="2"/>
+  <text x="100" y="25" text-anchor="middle" font-size="11" fill="#5b9bff" font-weight="bold">呼吸放松</text>
+</svg>

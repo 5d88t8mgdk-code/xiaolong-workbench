@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" fill="#fdf6f0"/>
+  <!-- 地面 -->
+  <line x1="20" y1="170" x2="180" y2="170" stroke="#ccc" stroke-width="1" stroke-dasharray="3,3"/>
+  <!-- 四点跪姿：手、膝着地 -->
+  <!-- 头部向左 -->
+  <circle cx="50" cy="80" r="10" fill="#ffd5b8" stroke="#5b9bff" stroke-width="2.5"/>
+  <!-- 背部弓起（猫式） -->
+  <path d="M 55 90 Q 100 60, 145 90" fill="none" stroke="#5b9bff" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- 手臂 -->
+  <line x1="55" y1="95" x2="40" y2="170" stroke="#5b9bff" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="145" y1="95" x2="160" y2="170" stroke="#5b9bff" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- 大腿 -->
+  <line x1="145" y1="90" x2="130" y2="170" stroke="#5b9bff" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="130" y1="170" x2="165" y2="170" stroke="#5b9bff" stroke-width="2.5" stroke-linecap="round"/>
+  <text x="100" y="30" text-anchor="middle" font-size="11" fill="#5b9bff" font-weight="bold">猫式伸展</text>
+  <text x="100" y="190" text-anchor="middle" font-size="9" fill="#999">吸气弓背 呼气塌腰</text>
+</svg>

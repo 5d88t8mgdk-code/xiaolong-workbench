@@ -962,20 +962,144 @@
   ];
 
   const AI_COACH_KEYWORDS = {
-    '肩颈':{label:'肩颈放松', videos:[{name:'5分钟肩颈拉伸',url:'https://www.bilibili.com/video/BV1gs411T7Cm',dur:'5min',platform:'B站'},{name:'办公室肩颈放松',url:'https://www.bilibili.com/video/BV1Eb411u7Xw',dur:'8min',platform:'B站'}],actions:['颈部绕环 ×10 次','斜方肌拉伸 左右各 30 秒','肩部画圈 前 10 / 后 10','耸肩放松 ×10 次']},
-    '腰':{label:'久坐腰部舒缓', videos:[{name:'腰部舒缓瑜伽',url:'https://www.bilibili.com/video/BV1Js411o7s1',dur:'10min',platform:'B站'},{name:'猫式伸展跟练',url:'https://www.youtube.com/watch?v=R2L2RtvJqLE',dur:'7min',platform:'YouTube'}],actions:['猫式伸展 ×8 次','婴儿式 保持 60 秒','仰卧扭转 左右各 30 秒','坐姿前屈 30 秒']},
-    '瘦肚子':{label:'核心燃脂', videos:[{name:'10分钟核心训练',url:'https://www.bilibili.com/video/BV1v4411C7g2',dur:'10min',platform:'B站'},{name:'帕梅拉腹肌',url:'https://www.bilibili.com/video/BV1PK4y1k7jT',dur:'15min',platform:'B站'}],actions:['卷腹 ×15 次','平板支撑 30 秒','俄罗斯转体 ×20 次','仰卧抬腿 ×15 次']},
-    '拉伸':{label:'睡前拉伸', videos:[{name:'睡前全身拉伸',url:'https://www.bilibili.com/video/BV1oW411n7jH',dur:'8min',platform:'B站'},{name:'助眠瑜伽',url:'https://www.bilibili.com/video/BV1Ds411T7tY',dur:'12min',platform:'B站'}],actions:['全身拉伸 8 分钟','股四头肌拉伸','腿部后侧拉伸','颈部放松']},
-    '生理期':{label:'经期舒缓瑜伽', videos:[{name:'经期舒缓瑜伽',url:'https://www.bilibili.com/video/BV1Ks411w7Ry',dur:'15min',platform:'B站'},{name:'生理期运动',url:'https://www.youtube.com/watch?v=2L2lnxIcJAQ',dur:'10min',platform:'YouTube'}],actions:['仰卧束角 60 秒','蝴蝶式 60 秒','婴儿式','呼吸放松']},
-    '累':{label:'低强度恢复', videos:[{name:'10分钟放松瑜伽',url:'https://www.bilibili.com/video/BV1Gs411T7pL',dur:'10min',platform:'B站'}],actions:['散步 20 分钟','阴瑜伽','呼吸训练 5 分钟']},
-    '不想动':{label:'10分钟微运动', videos:[{name:'10分钟低强度',url:'https://www.bilibili.com/video/BV1Rs411T7vK',dur:'10min',platform:'B站'}],actions:['靠墙静蹲 30 秒','拉伸 5 分钟','深呼吸']},
-    '全身':{label:'全身燃脂', videos:[{name:'帕梅拉全身燃脂',url:'https://www.bilibili.com/video/BV1PK4y1k7jT',dur:'20min',platform:'B站'},{name:'全身 HIIT',url:'https://www.youtube.com/watch?v=ml6cT4AZdqI',dur:'15min',platform:'YouTube'}],actions:['开合跳 ×20','深蹲 ×15','俯卧撑 ×10','波比跳 ×8']},
-    '腿':{label:'腿部塑形', videos:[{name:'腿部塑形跟练',url:'https://www.bilibili.com/video/BV1Js411o7wa',dur:'15min',platform:'B站'}],actions:['深蹲 ×15','弓步蹲 左右各 10','臀桥 ×15','侧卧抬腿 左右各 12']},
-    '臀':{label:'蜜桃臀训练', videos:[{name:'蜜桃臀养成',url:'https://www.bilibili.com/video/BV1Ks411w7sH',dur:'15min',platform:'B站'}],actions:['臀桥 ×15','臀推 ×12','侧抬腿 左右各 15','跪姿后踢腿 ×12']},
-    '胸':{label:'胸部塑形', videos:[{name:'胸部训练',url:'https://www.bilibili.com/video/BV1Es411u7nK',dur:'12min',platform:'B站'}],actions:['俯卧撑 ×10','哑铃卧推 ×12','跪姿俯卧撑 ×10','上斜推举 ×10']},
-    '背':{label:'背部塑形', videos:[{name:'背部训练',url:'https://www.bilibili.com/video/BV1Hs411T7wG',dur:'12min',platform:'B站'}],actions:['划船 ×12','YTWL 各 10','弹力带 ×15','俯身飞鸟 ×12']},
-    '手臂':{label:'拜拜肉消除', videos:[{name:'手臂塑形',url:'https://www.bilibili.com/video/BV1Cs411o7tY',dur:'10min',platform:'B站'}],actions:['哑铃弯举 ×12','臂屈伸 ×10','肩推 ×12','侧平举 ×12']},
-    '有氧':{label:'心肺训练', videos:[{name:'心肺 HIIT',url:'https://www.bilibili.com/video/BV1Zs411T7sQ',dur:'20min',platform:'B站'}],actions:['跳绳 100 个','开合跳 ×20','波比跳 ×10','高抬腿 30 秒']}
+    '肩颈':{
+      label:'肩颈放松',
+      videos:[{name:'5分钟肩颈拉伸',url:'https://www.bilibili.com/video/BV1gs411T7Cm',dur:'5min',platform:'B站'},{name:'办公室肩颈放松',url:'https://www.bilibili.com/video/BV1Eb411u7Xw',dur:'8min',platform:'B站'}],
+      actions:[
+        {name:'颈部绕环', time:'4 个方向 × 8 次', img:'neck-roll'},
+        {name:'斜方肌拉伸', time:'左右各 30 秒', img:'trap-stretch'},
+        {name:'肩部画圈', time:'前 10 / 后 10 次', img:'shoulder-roll'},
+        {name:'耸肩放松', time:'×10 次', img:'shrug'}
+      ]
+    },
+    '腰':{
+      label:'久坐腰部舒缓',
+      videos:[{name:'腰部舒缓瑜伽',url:'https://www.bilibili.com/video/BV1Js411o7s1',dur:'10min',platform:'B站'},{name:'猫式伸展跟练',url:'https://www.youtube.com/watch?v=R2L2RtvJqLE',dur:'7min',platform:'YouTube'}],
+      actions:[
+        {name:'猫式伸展', time:'×8 次', img:'cat-stretch'},
+        {name:'婴儿式', time:'保持 60 秒', img:'child-pose'},
+        {name:'仰卧扭转', time:'左右各 30 秒', img:'supine-twist'},
+        {name:'坐姿前屈', time:'保持 30 秒', img:'seated-fold'}
+      ]
+    },
+    '瘦肚子':{
+      label:'核心燃脂',
+      videos:[{name:'10分钟核心训练',url:'https://www.bilibili.com/video/BV1v4411C7g2',dur:'10min',platform:'B站'},{name:'帕梅拉腹肌',url:'https://www.bilibili.com/video/BV1PK4y1k7jT',dur:'15min',platform:'B站'}],
+      actions:[
+        {name:'卷腹', time:'×15 次', img:'crunch'},
+        {name:'平板支撑', time:'保持 30 秒', img:'plank'},
+        {name:'俄罗斯转体', time:'×20 次', img:'russian-twist'},
+        {name:'仰卧抬腿', time:'×15 次', img:'leg-raise'}
+      ]
+    },
+    '拉伸':{
+      label:'睡前拉伸',
+      videos:[{name:'睡前全身拉伸',url:'https://www.bilibili.com/video/BV1oW411n7jH',dur:'8min',platform:'B站'},{name:'助眠瑜伽',url:'https://www.bilibili.com/video/BV1Ds411T7tY',dur:'12min',platform:'B站'}],
+      actions:[
+        {name:'全身拉伸', time:'8 分钟', img:'full-stretch'},
+        {name:'股四头肌拉伸', time:'左右各 30 秒', img:'quad-stretch'},
+        {name:'腿部后侧拉伸', time:'左右各 30 秒', img:'hamstring-stretch'},
+        {name:'颈部放松', time:'×10 次', img:'neck-roll'}
+      ]
+    },
+    '生理期':{
+      label:'经期舒缓瑜伽',
+      videos:[{name:'经期舒缓瑜伽',url:'https://www.bilibili.com/video/BV1Ks411w7Ry',dur:'15min',platform:'B站'},{name:'生理期运动',url:'https://www.youtube.com/watch?v=2L2lnxIcJAQ',dur:'10min',platform:'YouTube'}],
+      actions:[
+        {name:'仰卧束角', time:'保持 60 秒', img:'supine-twist'},
+        {name:'蝴蝶式', time:'保持 60 秒', img:'child-pose'},
+        {name:'婴儿式', time:'保持 60 秒', img:'child-pose'},
+        {name:'呼吸放松', time:'5 分钟', img:'meditation'}
+      ]
+    },
+    '累':{
+      label:'低强度恢复',
+      videos:[{name:'10分钟放松瑜伽',url:'https://www.bilibili.com/video/BV1Gs411T7pL',dur:'10min',platform:'B站'}],
+      actions:[
+        {name:'散步', time:'20 分钟', img:'walk'},
+        {name:'阴瑜伽', time:'10 分钟', img:'child-pose'},
+        {name:'呼吸训练', time:'5 分钟', img:'meditation'}
+      ]
+    },
+    '不想动':{
+      label:'10分钟微运动',
+      videos:[{name:'10分钟低强度',url:'https://www.bilibili.com/video/BV1Rs411T7vK',dur:'10min',platform:'B站'}],
+      actions:[
+        {name:'靠墙静蹲', time:'30 秒 × 3 组', img:'wall-sit'},
+        {name:'拉伸', time:'5 分钟', img:'full-stretch'},
+        {name:'深呼吸', time:'3 分钟', img:'meditation'}
+      ]
+    },
+    '全身':{
+      label:'全身燃脂',
+      videos:[{name:'帕梅拉全身燃脂',url:'https://www.bilibili.com/video/BV1PK4y1k7jT',dur:'20min',platform:'B站'},{name:'全身 HIIT',url:'https://www.youtube.com/watch?v=ml6cT4AZdqI',dur:'15min',platform:'YouTube'}],
+      actions:[
+        {name:'开合跳', time:'×20 次', img:'jumping-jack'},
+        {name:'深蹲', time:'×15 次', img:'squat'},
+        {name:'俯卧撑', time:'×10 次', img:'pushup'},
+        {name:'波比跳', time:'×8 次', img:'burpee'}
+      ]
+    },
+    '腿':{
+      label:'腿部塑形',
+      videos:[{name:'腿部塑形跟练',url:'https://www.bilibili.com/video/BV1Js411o7wa',dur:'15min',platform:'B站'}],
+      actions:[
+        {name:'深蹲', time:'×15 次', img:'squat'},
+        {name:'弓步蹲', time:'左右各 10', img:'lunge'},
+        {name:'臀桥', time:'×15 次', img:'glute-bridge'},
+        {name:'侧卧抬腿', time:'左右各 12', img:'side-leg'}
+      ]
+    },
+    '臀':{
+      label:'蜜桃臀训练',
+      videos:[{name:'蜜桃臀养成',url:'https://www.bilibili.com/video/BV1Ks411w7sH',dur:'15min',platform:'B站'}],
+      actions:[
+        {name:'臀桥', time:'×15 次', img:'glute-bridge'},
+        {name:'臀推', time:'×12 次', img:'glute-bridge'},
+        {name:'侧抬腿', time:'左右各 15', img:'side-leg'},
+        {name:'跪姿后踢腿', time:'×12 次', img:'knee-kick'}
+      ]
+    },
+    '胸':{
+      label:'胸部塑形',
+      videos:[{name:'胸部训练',url:'https://www.bilibili.com/video/BV1Es411u7nK',dur:'12min',platform:'B站'}],
+      actions:[
+        {name:'俯卧撑', time:'×10 次', img:'pushup'},
+        {name:'哑铃卧推', time:'×12 次', img:'bench-press'},
+        {name:'跪姿俯卧撑', time:'×10 次', img:'pushup'},
+        {name:'上斜推举', time:'×10 次', img:'shoulder-press'}
+      ]
+    },
+    '背':{
+      label:'背部塑形',
+      videos:[{name:'背部训练',url:'https://www.bilibili.com/video/BV1Hs411T7wG',dur:'12min',platform:'B站'}],
+      actions:[
+        {name:'划船', time:'×12 次', img:'row'},
+        {name:'YTWL', time:'各 10 次', img:'ytwl'},
+        {name:'弹力带', time:'×15 次', img:'row'},
+        {name:'俯身飞鸟', time:'×12 次', img:'fly'}
+      ]
+    },
+    '手臂':{
+      label:'拜拜肉消除',
+      videos:[{name:'手臂塑形',url:'https://www.bilibili.com/video/BV1Cs411o7tY',dur:'10min',platform:'B站'}],
+      actions:[
+        {name:'哑铃弯举', time:'×12 次', img:'curl'},
+        {name:'臂屈伸', time:'×10 次', img:'tricep'},
+        {name:'肩推', time:'×12 次', img:'shoulder-press'},
+        {name:'侧平举', time:'×12 次', img:'lateral-raise'}
+      ]
+    },
+    '有氧':{
+      label:'心肺训练',
+      videos:[{name:'心肺 HIIT',url:'https://www.bilibili.com/video/BV1Zs411T7sQ',dur:'20min',platform:'B站'}],
+      actions:[
+        {name:'跳绳', time:'100 个', img:'skip'},
+        {name:'开合跳', time:'×20 次', img:'jumping-jack'},
+        {name:'波比跳', time:'×10 次', img:'burpee'},
+        {name:'高抬腿', time:'30 秒', img:'high-knee'}
+      ]
+    }
   };
 
   function getSportToday(){ return store.get(SPORT_TODAY_KEY, null) || {date:'', kcal:0, completed:0, planBody:[], dietList:[]}; }
@@ -1467,14 +1591,31 @@
     }
     let html = '<b>💪 收到！推荐以下跟练：</b>';
     matches.slice(0,3).forEach(m => {
-      html += '<div style="margin-top:6px;"><b>'+m.label+'</b></div>';
-      html += '<div style="margin-top:4px;"><b>📺 跟练视频</b></div>';
-      m.videos.forEach(v => {
-        html += '<div class="vid-item"><a href="'+v.url+'" target="_blank">'+v.name+'</a><span style="color:var(--ink-soft);font-size:11px;">'+v.platform+' · '+v.dur+'</span></div>';
+      html += '<div class="ai-block">';
+      html += '<div class="ai-block-title">'+m.label+'</div>';
+
+      // 视频折叠区（链接容易失效，放在可折叠位置）
+      if(m.videos && m.videos.length){
+        html += '<details class="ai-video-details"><summary>📺 跟练视频（'+m.videos.length+' 个，可能需要联网）</summary>';
+        m.videos.forEach(v => {
+          html += '<div class="vid-item"><a href="'+v.url+'" target="_blank" rel="noopener">'+v.name+'</a><span class="muted-small"> · '+v.platform+' · '+v.dur+'</span></div>';
+        });
+        html += '</details>';
+      }
+
+      // 动作分解（核心：配图 + 时间 + 描述）
+      html += '<div class="ai-actions-head">🎯 动作分解（跟图练）：</div>';
+      m.actions.forEach((a, i) => {
+        html += '<div class="ai-action-card">';
+        html += '<div class="ai-action-img"><img src="./assets/poses/'+a.img+'.svg" alt="'+a.name+'" loading="lazy" /></div>';
+        html += '<div class="ai-action-info">';
+        html += '<div class="ai-action-num">'+(i+1)+'</div>';
+        html += '<div class="ai-action-name">'+a.name+'</div>';
+        html += '<div class="ai-action-time">⏱ '+a.time+'</div>';
+        html += '</div></div>';
       });
-      html += '<div style="margin-top:4px;"><b>🎯 推荐动作</b></div><ul>';
-      m.actions.forEach(a => { html += '<li>'+a+'</li>'; });
-      html += '</ul>';
+
+      html += '</div>';
     });
     return html;
   }

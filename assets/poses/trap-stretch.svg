@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" fill="#fdf6f0"/>
+  <line x1="100" y1="60" x2="100" y2="150" stroke="#5b9bff" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- 左臂自然下垂，右臂压头向左 -->
+  <line x1="100" y1="80" x2="70" y2="135" stroke="#5b9bff" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="100" y1="80" x2="95" y2="60" stroke="#5b9bff" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="95" y1="60" x2="90" y2="50" stroke="#5b9bff" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- 头部 - 向左倾斜 -->
+  <circle cx="95" cy="45" r="10" fill="#ffd5b8" stroke="#5b9bff" stroke-width="2.5"/>
+  <line x1="105" y1="50" x2="105" y2="65" stroke="#5b9bff" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="100" y1="150" x2="80" y2="195" stroke="#5b9bff" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="100" y1="150" x2="120" y2="195" stroke="#5b9bff" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- 拉伸方向箭头 -->
+  <path d="M 88 55 L 78 50" stroke="#ff5a8d" stroke-width="2" fill="none" marker-end="url(#a)"/>
+  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ff5a8d"/></marker></defs>
+  <text x="100" y="20" text-anchor="middle" font-size="11" fill="#5b9bff" font-weight="bold">斜方肌拉伸</text>
+</svg>
