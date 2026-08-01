@@ -388,19 +388,20 @@
       const v = sign * parseFloat(m[2]);
       return {type:'income', amount:v, raw:text};
     }
-    // 强制 pot 前缀：^(刚需|休闲|储蓄|备用)\s+(.+?)\s+(\d+)$
-    m = text.match(/^(刚需|休闲|储蓄|备用)\s+(.+?)\s+(\d+(?:\.\d+)?)$/);
+    // 强制 pot 前缀：^(刚需|休闲|储蓄|备用)\s+(.+?)(?:\s+)?(\d+(?:\.\d+)?)$
+    // 兼容「刚需 外卖 25」「刚需 外卖25」「刚需外卖25」三种写法
+    m = text.match(/^(刚需|休闲|储蓄|备用)\s*(.+?)\s*(\d+(?:\.\d+)?)$/);
     if(m){
       const potMap = {刚需:'need', 休闲:'want', 储蓄:'save', 备用:'emerg'};
       const pot = potMap[m[1]];
-      const note = m[2];
+      const note = m[2].trim();
       const amount = parseFloat(m[3]);
       return {type:'expense', amount, note, pot, category:POT_CONFIG[pot].name};
     }
-    // 普通：note + 数字
-    m = text.match(/^(.+?)\s+(\d+(?:\.\d+)?)$/);
+    // 普通：note + 数字（兼容「奶茶 15」「奶茶15」）
+    m = text.match(/^(.+?)(?:\s+)?(\d+(?:\.\d+)?)$/);
     if(m){
-      const note = m[1];
+      const note = m[1].trim();
       const amount = parseFloat(m[2]);
       const {pot, category} = autoCategorize(note);
       return {type:'expense', amount, note, pot, category};
@@ -483,6 +484,9 @@
   function refreshPots(){
     const inc = getIncome();
     const pots = getPots();
+    // 收入为 0 时显示引导提示
+    const hint = $('#potEmptyHint');
+    if(hint) hint.hidden = inc > 0;
     ['need','want','save','emerg'].forEach(k => {
       const total = +(inc * POT_CONFIG[k].pct).toFixed(2);
       const left = pots[k] || 0;

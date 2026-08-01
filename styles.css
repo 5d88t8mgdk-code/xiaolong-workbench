@@ -650,6 +650,11 @@ textarea#memoInput{
 /* 存钱罐 */
 .pot-intro{margin-bottom:10px;padding:0 4px;}
 .pot-intro .card-title{font-size:15px;}
+.pot-empty-hint{
+  margin-top:8px;padding:10px 12px;border-radius:12px;
+  background:#fff5e6;border:1px dashed #ffb877;color:#b86b1f;
+  font-size:12px;line-height:1.5;
+}
 .pot-list{display:flex;flex-direction:column;gap:10px;margin-bottom:12px;}
 .pot-card{
   background:#fff;border-radius:16px;padding:14px;
