@@ -2788,6 +2788,318 @@
     bindCustomize();
     // 安装引导
     bindInstallTip();
+    // 💬 问问小龙
+    bindAiPanel();
+  }
+
+  // ====== 💬 问问小龙（智谱 GLM-4-Flash 永久免费 API）======
+  // API 提供商：智谱 GLM-4-Flash（永久免费）或 DeepSeek（付费）
+  // 用户可在设置面板切换 provider 和粘贴自己的 key
+  const AI_CONFIG_KEY = 'workbench_ai_config';
+  const AI_HISTORY_KEY = 'workbench_ai_chat_history';
+  const AI_PROVIDERS = {
+    zhipu: { name:'智谱 GLM-4-Flash（永久免费）', url:'https://open.bigmodel.cn/api/paas/v4/chat/completions', model:'glm-4-flash' },
+    deepseek: { name:'DeepSeek（付费）', url:'https://api.deepseek.com/chat/completions', model:'deepseek-chat' }
+  };
+  function getAiConfig(){
+    const c = store.get(AI_CONFIG_KEY, null);
+    if(c && c.key) return c;
+    return { provider:'zhipu', key:'' };  // 默认智谱，用户需自己粘 key
+  }
+  function setAiConfig(c){ store.set(AI_CONFIG_KEY, c); }
+  const AI_SYSTEM_PROMPT = `你是「小龙」，用户的个人工作台 AI 助手。用户是一个住在中国的年轻女生，用 Hello Kitty 粉色风格的工作台 PWA 管理生活。
+
+你的角色：
+- 像朋友一样聊天，语气温暖、轻松、偶尔俏皮，不要客服腔
+- 回答简洁实用，能用一句话说清的不用三句
+- 涉及数字（金额/天数/进度）时给出具体数字，不要说"很多""一些"
+- 如果用户问的数据为空（比如没记账），温和提醒ta先记录，不要编造数据
+- 回答用 Markdown：**加粗**关键数字，必要时用列表，但不要整段加粗
+
+你能看到用户工作台的实时数据，数据会作为 system 消息提供给你。基于数据回答问题。`;
+
+  function getAiHistory(){ return store.get(AI_HISTORY_KEY, []); }
+  function setAiHistory(h){ store.set(AI_HISTORY_KEY, h.slice(-40)); }
+
+  // 收集工作台数据作为 AI 上下文
+  function collectWorkbenchContext(){
+    const ctx = { 时间: new Date().toLocaleString('zh-CN') };
+    
+    // 记账数据
+    try {
+      const mk = monthKey();
+      const inc = getIncome(mk);
+      const pots = getPots(mk);
+      const trans = getTrans(mk);
+      ctx.记账 = {
+        月份: mk,
+        月收入: '¥'+fmt(inc),
+        四个存钱罐: {
+          刚需支出_40百分比: '剩 ¥'+fmt(pots.need||0),
+          休闲弹性_30百分比: '剩 ¥'+fmt(pots.want||0),
+          储蓄理财_20百分比: '剩 ¥'+fmt(pots.save||0),
+          应急备用_10百分比: '剩 ¥'+fmt(pots.emerg||0)
+        },
+        本月交易笔数: trans.length,
+        最近5笔交易: trans.slice(-5).map(t => (t.date||'').slice(5)+' '+(t.time||'')+' '+(t.type==='income'?'收入':'支出')+' ¥'+fmt(t.amount)+' '+t.note+' ['+t.category+']')
+      };
+    } catch(e) { ctx.记账 = '读取失败'; }
+
+    // 储蓄目标
+    try {
+      const goals = getGoals();
+      if(goals && goals.length) ctx.储蓄目标 = goals.map(g => g.name+': 已存¥'+fmt(g.saved||0)+'/目标¥'+fmt(g.target)+', 截止'+(g.deadline||'无'));
+    } catch(e) {}
+
+    // 锻炼数据
+    try {
+      const today = getSportToday();
+      const plan = getSportPlan();
+      const follows = getSportFollows();
+      ctx.锻炼 = {
+        今日: { 日期: today.date, 消耗大卡: today.kcal, 完成动作数: today.completed, 训练部位: (today.planBody||[]).join('/')||'未定', 饮食记录数: (today.dietList||[]).length },
+        周计划起始: plan ? plan.weekStart : '未生成',
+        本周已完成天数: plan ? Object.keys(plan.checked||{}).length : 0,
+        关注博主数: follows ? follows.length : 0
+      };
+    } catch(e) { ctx.锻炼 = '读取失败'; }
+
+    // 待办
+    try {
+      const todos = store.get(TODO_KEY, []);
+      const undone = todos.filter(t => !t.done);
+      ctx.待办 = { 总数: todos.length, 未完成: undone.length, 最近未完成: undone.slice(0,8).map(t => t.text) };
+    } catch(e) {}
+
+    // 美甲
+    try {
+      const styles = getNailStyles();
+      const goals = getNailGoals();
+      const practice = getNailPractice();
+      ctx.美甲 = {
+        款式库数量: styles.length,
+        款式标签分布: countNailTags(styles),
+        练习目标数: goals.length,
+        练习记录天数: Object.keys(practice || {}).length
+      };
+    } catch(e) {}
+
+    // 备忘
+    try {
+      const memos = store.get(MEMO_KEY, []);
+      if(memos.length) ctx.备忘录 = memos.slice(0,5).map(m => m.text);
+    } catch(e) {}
+
+    return JSON.stringify(ctx, null, 2);
+  }
+
+  function countNailTags(styles){
+    const counts = {};
+    styles.forEach(s => {
+      Object.values(s.tags||{}).flat().forEach(t => { counts[t] = (counts[t]||0)+1; });
+    });
+    return counts;
+  }
+
+  function appendAiMsg(role, text){
+    const body = $('#aiPanelBody');
+    const div = document.createElement('div');
+    div.className = 'ai-msg '+(role==='user'?'user':'bot');
+    // 简易 Markdown：**bold** + 换行
+    const html = text
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+      .replace(/`(.+?)`/g, '<code>$1</code>');
+    div.innerHTML = '<div class="ai-msg-bubble">'+html.replace(/\n/g,'<br>')+'</div>';
+    body.appendChild(div);
+    body.scrollTop = body.scrollHeight;
+    return div;
+  }
+
+  function showAiTyping(){
+    const body = $('#aiPanelBody');
+    const div = document.createElement('div');
+    div.className = 'ai-msg bot';
+    div.id = 'aiTypingIndicator';
+    div.innerHTML = '<div class="ai-msg-bubble"><div class="ai-msg-typing"><span></span><span></span><span></span></div></div>';
+    body.appendChild(div);
+    body.scrollTop = body.scrollHeight;
+  }
+  function hideAiTyping(){ const t = $('#aiTypingIndicator'); if(t) t.remove(); }
+
+  async function callAi(userText){
+    const cfg = getAiConfig();
+    if(!cfg.key){
+      throw new Error('NO_KEY');
+    }
+    const provider = AI_PROVIDERS[cfg.provider] || AI_PROVIDERS.zhipu;
+    const context = collectWorkbenchContext();
+    const messages = [
+      { role:'system', content: AI_SYSTEM_PROMPT + '\n\n## 用户工作台实时数据\n```json\n' + context + '\n```' }
+    ];
+    // 带上最近 6 条历史
+    const hist = getAiHistory();
+    hist.slice(-6).forEach(h => messages.push({ role: h.role, content: h.content }));
+    messages.push({ role:'user', content: userText });
+
+    const resp = await fetch(provider.url, {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+cfg.key
+      },
+      body: JSON.stringify({
+        model: provider.model,
+        messages: messages,
+        max_tokens: 800,
+        temperature: 0.7
+      })
+    });
+    if(!resp.ok){
+      const err = await resp.text();
+      throw new Error('API '+resp.status+': '+err.substring(0,200));
+    }
+    const data = await resp.json();
+    return data.choices[0].message.content;
+  }
+
+  async function handleAiSend(text){
+    text = (text||'').trim();
+    if(!text) return;
+    const input = $('#aiPanelInput');
+    const sendBtn = $('#aiPanelSend');
+    input.value = '';
+    input.style.height = 'auto';
+    sendBtn.disabled = true;
+
+    // 清掉欢迎语
+    const welcome = $('#aiPanelBody .ai-panel-welcome');
+    if(welcome) welcome.remove();
+
+    appendAiMsg('user', text);
+    showAiTyping();
+
+    // 记录用户消息
+    const hist = getAiHistory();
+    hist.push({ role:'user', content:text });
+
+    try {
+      const reply = await callAi(text);
+      hideAiTyping();
+      appendAiMsg('bot', reply);
+      hist.push({ role:'assistant', content:reply });
+      setAiHistory(hist);
+    } catch(e){
+      hideAiTyping();
+      let errMsg = e.message;
+      if(errMsg === 'NO_KEY'){
+        appendAiMsg('bot', '**还没配置 API key**\n\n点击下面的「⚙️ 设置」按钮，选择「智谱 GLM-4-Flash（永久免费）」，然后粘贴你的 API key 就能用了。\n\n获取方式：\n1. 打开 open.bigmodel.cn 注册\n2. 在「API Keys」页面创建 key\n3. 复制 key 粘贴到设置里\n\nGLM-4-Flash 是**永久免费**的，不用充钱。');
+        showAiSettingsLink();
+      } else if(errMsg.includes('401')) errMsg = 'API key 无效，请检查设置';
+      else if(errMsg.includes('429')) errMsg = '调用太频繁了，等几秒再试';
+      else if(errMsg.includes('Failed to fetch')) errMsg = '网络连不上，检查下网络';
+      if(errMsg !== 'NO_KEY') appendAiMsg('bot', '抱歉，出错了：'+errMsg);
+    } finally {
+      sendBtn.disabled = false;
+      input.focus();
+    }
+  }
+
+  function bindAiPanel(){
+    const fab = $('#aiFab');
+    const panel = $('#aiPanel');
+    const overlay = $('#aiPanelOverlay');
+    const closeBtn = $('#aiPanelClose');
+    const input = $('#aiPanelInput');
+    const sendBtn = $('#aiPanelSend');
+
+    function open(){
+      panel.hidden = false;
+      overlay.hidden = false;
+      requestAnimationFrame(()=>{
+        panel.classList.add('show');
+        overlay.classList.add('show');
+      });
+      setTimeout(()=> input.focus(), 300);
+      // 加载历史
+      const hist = getAiHistory();
+      if(hist.length > 0){
+        const welcome = $('#aiPanelBody .ai-panel-welcome');
+        if(welcome) welcome.remove();
+        hist.slice(-12).forEach(h => appendAiMsg(h.role==='user'?'user':'bot', h.content));
+      }
+    }
+    function close(){
+      panel.classList.remove('show');
+      overlay.classList.remove('show');
+      setTimeout(()=>{ panel.hidden = true; overlay.hidden = true; }, 300);
+      // 清空 body 里的消息（下次打开重新加载）
+      $('#aiPanelBody').innerHTML = '<div class="ai-panel-welcome"><div class="ai-welcome-emoji">👋</div><div class="ai-welcome-text">你好呀！我能看到你工作台的所有数据（账单/锻炼/美甲/待办）。<br>试试问我：</div><div class="ai-suggest-list"><button class="ai-suggest" data-q="我这个月花了多少钱？存在哪些问题上">这个月花了多少？</button><button class="ai-suggest" data-q="分析下我的锻炼打卡情况，给建议">分析锻炼情况</button><button class="ai-suggest" data-q="我的存钱进度怎么样？要怎么改进">存钱进度分析</button><button class="ai-suggest" data-q="看看我的待办，哪些该优先处理">待办优先级</button></div></div>';
+      rebindSuggests();
+    }
+
+    fab.addEventListener('click', open);
+    closeBtn.addEventListener('click', close);
+    overlay.addEventListener('click', close);
+
+    sendBtn.addEventListener('click', ()=> handleAiSend(input.value));
+    input.addEventListener('keydown', e => {
+      if(e.key === 'Enter' && !e.shiftKey){
+        e.preventDefault();
+        handleAiSend(input.value);
+      }
+    });
+    // textarea 自适应高度
+    input.addEventListener('input', ()=>{
+      input.style.height = 'auto';
+      input.style.height = Math.min(100, input.scrollHeight) + 'px';
+    });
+
+    // 设置按钮
+    $('#aiSettingsBtn').addEventListener('click', openAiSettings);
+
+    function rebindSuggests(){
+      $$('.ai-suggest').forEach(btn => {
+        btn.addEventListener('click', ()=>{
+          handleAiSend(btn.dataset.q);
+        });
+      });
+    }
+    rebindSuggests();
+  }
+
+  function openAiSettings(){
+    const cfg = getAiConfig();
+    $('#aiProviderSelect').value = cfg.provider || 'zhipu';
+    $('#aiKeyInput').value = cfg.key || '';
+    const status = $('#aiSettingsStatus');
+    status.innerHTML = cfg.key
+      ? '<span style="color:#7ecaa0;">✓ 已配置（'+(AI_PROVIDERS[cfg.provider||'zhipu'].name)+'）</span>'
+      : '<span style="color:#ff5a8d;">未配置，请粘贴 API key</span>';
+    openModal('aiSettingsModal');
+    $('#aiSettingsSave').onclick = ()=>{
+      const provider = $('#aiProviderSelect').value;
+      const key = $('#aiKeyInput').value.trim();
+      if(!key){ toast('请先粘贴 API key'); return; }
+      setAiConfig({ provider, key });
+      toast('已保存，现在可以对话了');
+      closeModal('aiSettingsModal');
+      // 更新面板副标题
+      const sub = $('#aiPanelSub');
+      if(sub) sub.textContent = '已连接 · ' + AI_PROVIDERS[provider].name;
+    };
+  }
+
+  function showAiSettingsLink(){
+    const body = $('#aiPanelBody');
+    const lastMsg = body.lastElementChild;
+    if(lastMsg){
+      const btn = document.createElement('button');
+      btn.className = 'ai-settings-show-link';
+      btn.textContent = '⚙️ 去设置 API key';
+      btn.addEventListener('click', openAiSettings);
+      lastMsg.querySelector('.ai-msg-bubble').appendChild(btn);
+    }
   }
 
   // ====== 安装到主屏幕引导 ======
