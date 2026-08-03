@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>小龙工作台 · 一键生成指令</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,#fff0f3,#fff5e6);min-height:100vh;padding:20px;color:#3a2a32;}
+.container{max-width:680px;margin:0 auto;}
+.header{text-align:center;padding:30px 20px 20px;}
+.header h1{font-size:28px;color:#ff5a8d;margin-bottom:8px;}
+.header p{color:#8a6a72;font-size:14px;line-height:1.6;}
+.steps{background:#fff;border-radius:16px;padding:20px;margin:20px 0;box-shadow:0 2px 12px rgba(255,90,141,0.1);}
+.steps h2{font-size:16px;color:#ff5a8d;margin-bottom:12px;}
+.steps ol{padding-left:20px;font-size:13px;line-height:2;color:#5a3a42;}
+.instruction-box{background:#2d2d2d;border-radius:16px;padding:20px;margin:20px 0;position:relative;}
+.instruction-box pre{color:#f8f8f8;font-size:12px;line-height:1.7;white-space:pre-wrap;word-break:break-word;font-family:'SF Mono',Consolas,Monaco,monospace;max-height:400px;overflow-y:auto;}
+.copy-btn{position:absolute;top:12px;right:12px;background:#ff5a8d;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;}
+.copy-btn:active{transform:scale(0.95);}
+.copy-btn.copied{background:#7ecaa0;}
+.features{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:20px 0;}
+.feature{background:#fff;border-radius:12px;padding:14px;font-size:12px;color:#5a3a42;box-shadow:0 1px 4px rgba(0,0,0,0.05);}
+.feature b{color:#ff5a8d;display:block;margin-bottom:4px;}
+.notice{background:#fff5e6;border:1px dashed #ffb877;border-radius:12px;padding:14px;margin:20px 0;font-size:12px;color:#b86b1f;line-height:1.6;}
+.footer{text-align:center;padding:20px;color:#aaa;font-size:11px;}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:#3a2a32;color:#fff;padding:12px 24px;border-radius:99px;font-size:13px;transition:transform .3s;z-index:999;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+@media(max-width:600px){.features{grid-template-columns:1fr;}.header h1{font-size:22px;}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>🐱 小龙工作台</h1>
+    <p>Hello Kitty 粉色风格个人工作台 · 一键生成指令<br>复制下方指令发给 AI，自动生成你的工作台 App</p>
+  </div>
+
+  <div class="features">
+    <div class="feature"><b>💰 财务储蓄</b>4321 四分存钱法记账</div>
+    <div class="feature"><b>💪 健身打卡</b>5 tab + AI 教练配图</div>
+    <div class="feature"><b>💅 美甲款式库</b>图片收藏 + AI 找款</div>
+    <div class="feature"><b>📖 英语学习</b>单词 + 计划 + 统计</div>
+    <div class="feature"><b>✅ 待办事项</b>任务管理</div>
+    <div class="feature"><b>💬 AI 助手</b>读工作台数据对话</div>
+  </div>
+
+  <div class="steps">
+    <h2>📌 使用步骤</h2>
+    <ol>
+      <li>复制下方指令（点右上角「复制」按钮）</li>
+      <li>粘贴给任意 AI 助手（ChatGPT / Claude / GLM / Kimi / 通义千问）</li>
+      <li>AI 会问你昵称，然后自动生成并部署</li>
+      <li>手机 Safari 打开地址 → 添加到主屏幕 → 像 App 一样用</li>
+    </ol>
+  </div>
+
+  <div class="instruction-box">
+    <button class="copy-btn" id="copyBtn" onclick="copyInstruction()">📋 复制指令</button>
+    <pre id="instructionText">请帮我生成并部署一个个人工作台 PWA 应用。
+
+背景：模板仓库 https://github.com/5d88t8mgdk-code/xiaolong-workbench
+
+第一步获取模板：git clone https://github.com/5d88t8mgdk-code/xiaolong-workbench.git（clone 失败就用 raw.githubusercontent.com/5d88t8mgdk-code/xiaolong-workbench/main/ 逐个 fetch index.html / app.js / styles.css / manifest.json 和 assets/ 下的资源）
+
+这是 Hello Kitty 粉色风格个人生活管理 PWA，纯前端+localStorage，含：日常打卡/英语学习/财务储蓄(4321存钱法)/健身打卡(5tab+AI教练配图)/美甲款式库/待办/备忘/资讯/财务目标 + AI助手悬浮按钮(智谱GLM-4-Flash永久免费)
+
+请先问我昵称，然后：1.所有"小龙工作台"改成我的昵称 2.AI助手"问问小龙"改成"问问〇〇" 3.主题保持粉色 4.AI key留空让用户自己粘(open.bigmodel.cn注册永久免费)
+
+部署到我GitHub新仓库→Settings→Pages启用→访问 用户名.github.io/仓库名
+
+手机Safari打开→添加到主屏幕→像App一样用。纯前端断网可用，数据存本地。
+
+现在开始：clone代码→问我昵称→修改→部署。</pre>
+  </div>
+
+  <div class="notice">
+    ⚠️ <b>注意</b><br>
+    • AI 助手需自己注册智谱 API key（open.bigmodel.cn，永久免费）<br>
+    • 数据存在手机本地，换手机/清缓存会丢<br>
+    • AI 执行报错就把错误发回给它，它会自己修
+  </div>
+
+  <div class="footer">
+    小龙工作台 · Hello Kitty 风格 · Made with 💕
+  </div>
+</div>
+
+<div class="toast" id="toast">已复制！粘贴给 AI 助手即可</div>
+
+<script>
+function copyInstruction(){
+  const text = document.getElementById('instructionText').textContent;
+  const btn = document.getElementById('copyBtn');
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(text).then(()=>{
+      btn.textContent='✓ 已复制';btn.classList.add('copied');
+      showToast();
+      setTimeout(()=>{btn.textContent='📋 复制指令';btn.classList.remove('copied');},2000);
+    });
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    btn.textContent='✓ 已复制';btn.classList.add('copied');
+    showToast();
+    setTimeout(()=>{btn.textContent='📋 复制指令';btn.classList.remove('copied');},2000);
+  }
+}
+function showToast(){
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2000);
+}
+</script>
+</body>
+</html>
