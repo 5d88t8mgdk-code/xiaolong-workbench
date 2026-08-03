@@ -2804,7 +2804,8 @@
   function getAiConfig(){
     const c = store.get(AI_CONFIG_KEY, null);
     if(c && c.key) return c;
-    return { provider:'zhipu', key:'' };  // 默认智谱，用户需自己粘 key
+    // 默认预填用户的智谱 key（GLM-4-Flash 永久免费）
+    return { provider:'zhipu', key:'51dd9684123842ff84a6efbbfa31860e.qRJZv4hDKPCf7qOo' };
   }
   function setAiConfig(c){ store.set(AI_CONFIG_KEY, c); }
   const AI_SYSTEM_PROMPT = `你是「小龙」，用户的个人工作台 AI 助手。用户是一个住在中国的年轻女生，用 Hello Kitty 粉色风格的工作台 PWA 管理生活。
